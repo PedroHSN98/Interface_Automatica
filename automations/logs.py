@@ -1,6 +1,11 @@
 import os
+import re
 import queue
 import threading
+
+FTL_FAILED_RE = re.compile(
+    r'-\s+Failed at:.*?\[in template "([^"]+)" at line (\d+), column (\d+)\]'
+)
 
 
 PADROES = {
@@ -55,7 +60,8 @@ def run_logs(log_path: str, out_q: queue.Queue, stop_ev: threading.Event):
         out_q.put(("DONE", None))
         return
 
-    contagem = {nome: 0 for nome in PADROES.values()}
+    contagem    = {nome: 0 for nome in PADROES.values()}
+    ftl_details: dict = {}
 
     try:
         with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -67,6 +73,11 @@ def run_logs(log_path: str, out_q: queue.Queue, stop_ev: threading.Event):
                 for termo, nome in PADROES.items():
                     if termo in linha:
                         contagem[nome] += 1
+                if "- Failed at:" in linha and "in template" in linha:
+                    m = FTL_FAILED_RE.search(linha)
+                    if m:
+                        key = f'[in template "{m.group(1)}" at line {m.group(2)}, column {m.group(3)}]'
+                        ftl_details[key] = ftl_details.get(key, 0) + 1
     except Exception as e:
         log(f"  [ERRO] {e}", "error")
         out_q.put(("DONE", None))
@@ -96,7 +107,19 @@ def run_logs(log_path: str, out_q: queue.Queue, stop_ev: threading.Event):
     log("  " + "─" * 56, "dim")
     log(f"  Total de ocorrências encontradas: {total}", "title")
     log("  " + "─" * 56, "dim")
+    if ftl_details:
+        log("")
+        log("  " + "─" * 56, "dim")
+        log("  FTL STACK TRACE — Detalhamento por template", "title")
+        log("  " + "─" * 56, "dim")
+        log("")
+        for loc, qty in sorted(ftl_details.items(), key=lambda x: -x[1]):
+            bar = "█" * min(qty, 30)
+            tag = "error" if qty >= 5 else "warning"
+            log(f"  {loc}  →  {qty:>4}x   {bar}", tag)
+        log("")
+
     log("")
     log("  Análise concluída com sucesso!", "success")
-    out_q.put(("RESULT_DATA", {"arquivo": log_path, "contagem": contagem, "total": total}))
+    out_q.put(("RESULT_DATA", {"arquivo": log_path, "contagem": contagem, "total": total, "ftl_details": ftl_details}))
     out_q.put(("DONE", None))

@@ -446,6 +446,22 @@ class AutoHubApp:
             f"  Total de ocorrências: {data['total']}",
             "─" * 64,
         ]
+        if data.get("ftl_details"):
+            lines += [
+                "",
+                "─" * 64,
+                "  FTL STACK TRACE — Detalhamento por template",
+                "─" * 64,
+                "",
+            ]
+            for loc, qty in sorted(data["ftl_details"].items(), key=lambda x: -x[1]):
+                lines.append(f"  {loc} = {qty}")
+            lines += [
+                "",
+                "─" * 64,
+                f"  Total de ocorrências FTL: {sum(data['ftl_details'].values())}",
+                "─" * 64,
+            ]
         with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
         self._set_status(f"Salvo: {os.path.basename(path)}", C["green"])
