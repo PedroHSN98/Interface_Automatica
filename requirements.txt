@@ -1,0 +1,17 @@
+# AutoHub Pro — Dependências
+# Instale com: pip install -r requirements.txt
+
+# --- Scraper de Imagens ---
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+tqdm>=4.66.0
+
+# --- AMAWeb ---
+selenium>=4.18.0
+
+# --- Utilitários ---
+pillow>=10.0.0
+
+# tkinter já vem incluído no Python padrão (não precisa instalar)
