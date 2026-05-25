@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import filedialog
 import threading
@@ -39,6 +40,7 @@ class AutoHubApp:
         self.running  = False
         self.stop_ev  = threading.Event()
         self.out_q    = queue.Queue()
+        self._logs_result   = None
 
         self.logs_path      = tk.StringVar(value="logs_servidor/logs.xml")
         self.scraper_links  = tk.StringVar(value="fontes/links.txt")
@@ -316,6 +318,26 @@ class AutoHubApp:
         card = self._config_card(pg)
         self._file_row(card, 1, "Arquivo logs.xml", self.logs_path, "file")
         self._action_row(card, 2, self._exec_logs)
+
+        dl_frm = tk.Frame(card, bg=C["bg2"])
+        dl_frm.grid(row=3, column=0, columnspan=4, sticky="w", pady=(6, 0))
+        self._logs_download_btn = tk.Button(
+            dl_frm,
+            text="⬇   Baixar resultado (.txt)",
+            font=("Segoe UI", 10),
+            bg=C["bg4"],
+            fg=C["text3"],
+            activebackground=C["green"],
+            activeforeground="#ffffff",
+            relief="flat",
+            cursor="hand2",
+            padx=18,
+            pady=9,
+            state="disabled",
+            command=self._download_logs,
+        )
+        self._logs_download_btn.pack(side="left")
+
         self.term_logs = self._terminal_card(pg, "logs")
         return pg
 
@@ -387,6 +409,8 @@ class AutoHubApp:
                          daemon=True).start()
 
     def _exec_logs(self):
+        self._logs_result = None
+        self._logs_download_btn.configure(state="disabled", fg=C["text3"])
         self._start(run_logs, self.logs_path.get())
 
     def _exec_scraper(self):
@@ -394,6 +418,38 @@ class AutoHubApp:
 
     def _exec_amaweb(self):
         self._start(run_amaweb, self.ama_urls.get(), self.ama_result.get())
+
+    def _download_logs(self):
+        if not self._logs_result:
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Texto", "*.txt")],
+            initialfile="relatorio_logs.txt",
+        )
+        if not path:
+            return
+        data = self._logs_result
+        ts   = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        lines = [
+            "AutoHub Pro — Relatório de Logs",
+            f"Gerado em:          {ts}",
+            f"Arquivo analisado:  {data['arquivo']}",
+            "─" * 64,
+            "",
+        ]
+        for i, (erro, qty) in enumerate(data["contagem"].items(), 1):
+            lines.append(f"  {i:02d}. {erro} = {qty}")
+        lines += [
+            "",
+            "─" * 64,
+            f"  Total de ocorrências: {data['total']}",
+            "─" * 64,
+        ]
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+        self._set_status(f"Salvo: {os.path.basename(path)}", C["green"])
+        self._append(self.term_logs, f"\n  [✓] Relatório salvo: {path}\n", "success")
 
     def _stop(self):
         if self.running:
@@ -412,6 +468,9 @@ class AutoHubApp:
                     self.running = False
                     self._term_footer(term)
                     self._set_status("Concluído", C["green"])
+                elif tag == "RESULT_DATA":
+                    self._logs_result = text
+                    self._logs_download_btn.configure(state="normal", fg=C["text2"])
                 else:
                     self._append(term, text, tag)
         except queue.Empty:

@@ -98,4 +98,5 @@ def run_logs(log_path: str, out_q: queue.Queue, stop_ev: threading.Event):
     log("  " + "─" * 56, "dim")
     log("")
     log("  Análise concluída com sucesso!", "success")
+    out_q.put(("RESULT_DATA", {"arquivo": log_path, "contagem": contagem, "total": total}))
     out_q.put(("DONE", None))
