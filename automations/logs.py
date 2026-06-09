@@ -1,12 +1,28 @@
 import os
-import re
 import queue
 import threading
+from datetime import datetime
+import paramiko
+from dotenv import load_dotenv
 
-FTL_FAILED_RE = re.compile(
-    r'-\s+Failed at:.*?\[in template "([^"]+)" at line (\d+), column (\d+)\]'
-)
+load_dotenv()
 
+ELASTICSEARCHS = {
+    "Elasticsearch 1": "192.168.200.124",
+    "Elasticsearch 2": "192.168.200.161",
+    "Elasticsearch 3": "192.168.200.162",
+}
+
+LIFERAYS = {
+    "Liferay 1": "192.168.200.140",
+    "Liferay 2": "192.168.200.147",
+}
+
+USUARIO = os.getenv("LIFERAY_USUARIO")
+SENHA   = os.getenv("LIFERAY_SENHA")
+
+ARQUIVO_LOG_ELASTIC = "/var/log/elasticsearch/LiferayElasticsearchCluster.log"
+BASE_LIFERAY = "/home/liferay/logs/liferay.{data}"
 
 PADROES = {
     '<log4j:message><![CDATA[org.elasticsearch.ElasticsearchStatusException:':
@@ -46,80 +62,210 @@ PADROES = {
 }
 
 
-def run_logs(log_path: str, out_q: queue.Queue, stop_ev: threading.Event):
+def _ssh_client(ip):
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(ip, username=USUARIO, password=SENHA, timeout=20)
+    return ssh
+
+
+def _exec_cmd(ssh, cmd):
+    _, stdout, stderr = ssh.exec_command(cmd)
+    out = stdout.read().decode(errors="ignore").strip()
+    err = stderr.read().decode(errors="ignore").strip()
+    return out, err
+
+
+def _obter_tamanho_elastic(nome, ip):
+    try:
+        ssh = _ssh_client(ip)
+        out, err = _exec_cmd(ssh, f"stat -c%s {ARQUIVO_LOG_ELASTIC}")
+        ssh.close()
+        if err:
+            return None, f"{nome}: erro ao obter tamanho ({err})"
+        return int(out), None
+    except Exception as e:
+        return None, f"{nome}: falha de conexão ({e})"
+
+
+def _obter_tamanho_liferay(nome, ip, data_iso):
+    try:
+        ssh = _ssh_client(ip)
+        arq = BASE_LIFERAY.format(data=data_iso) + ".log"
+        out, err = _exec_cmd(ssh, f"stat -c%s '{arq}'")
+        ssh.close()
+        if err:
+            return None, f"{nome}: arquivo LOG não encontrado para {data_iso}"
+        return int(out), None
+    except Exception as e:
+        return None, f"{nome}: falha na etapa tamanho LOG ({e})"
+
+
+def _grep_padroes(ssh, xml):
+    totais = dict.fromkeys(PADROES.values(), 0)
+    for busca, exibicao in PADROES.items():
+        out, _ = _exec_cmd(ssh, f"grep -F -c {repr(busca)} '{xml}'")
+        try:
+            totais[exibicao] = int(out or "0")
+        except ValueError:
+            totais[exibicao] = 0
+    return totais
+
+
+def _grep_ftl_templates(ssh, xml):
+    cmd = f"grep -oP '\\[in template \"[^\"]*\"' '{xml}' | sort | uniq -c | sort -rn"
+    out, _ = _exec_cmd(ssh, cmd)
+    templates = {}
+    for line in out.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(None, 1)
+        if len(parts) == 2:
+            try:
+                templates[parts[1]] = int(parts[0])
+            except ValueError:
+                pass
+    return templates
+
+
+def _contar_padroes(nome, ip, data_iso):
+    try:
+        ssh = _ssh_client(ip)
+        xml = BASE_LIFERAY.format(data=data_iso) + ".xml"
+        out, _ = _exec_cmd(ssh, f"test -f '{xml}' && echo OK")
+        if out != "OK":
+            ssh.close()
+            return None, f"{nome}: arquivo XML não encontrado para {data_iso}"
+        totais = _grep_padroes(ssh, xml)
+        ftl_templates = {}
+        if totais.get("FTL stack trace", 0) > 0:
+            ftl_templates = _grep_ftl_templates(ssh, xml)
+        ssh.close()
+        return {"totais": totais, "ftl_templates": ftl_templates}, None
+    except Exception as e:
+        return None, f"{nome}: falha na análise XML ({e})"
+
+
+def run_logs(datas: list, out_q: queue.Queue, stop_ev: threading.Event):
     def log(msg, tag="normal"):
         out_q.put((tag, msg + "\n"))
 
-    log("  Iniciando análise de logs...", "info")
-    log(f"  Arquivo: {log_path}", "info")
+    log("  Iniciando coleta de logs via SSH...", "info")
     log("")
 
-    if not os.path.exists(log_path):
-        log(f"  [ERRO] Arquivo não encontrado: {log_path}", "error")
-        log("  Verifique o caminho e tente novamente.", "warning")
-        out_q.put(("DONE", None))
-        return
-
-    contagem    = {nome: 0 for nome in PADROES.values()}
-    ftl_details: dict = {}
-
-    try:
-        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
-            for linha in f:
-                if stop_ev.is_set():
-                    log("\n  [!] Execução interrompida.", "warning")
-                    out_q.put(("DONE", None))
-                    return
-                for termo, nome in PADROES.items():
-                    if termo in linha:
-                        contagem[nome] += 1
-                if "- Failed at:" in linha and "in template" in linha:
-                    m = FTL_FAILED_RE.search(linha)
-                    if m:
-                        key = f'[in template "{m.group(1)}" at line {m.group(2)}, column {m.group(3)}]'
-                        ftl_details[key] = ftl_details.get(key, 0) + 1
-    except Exception as e:
-        log(f"  [ERRO] {e}", "error")
-        out_q.put(("DONE", None))
-        return
-
-    log("  " + "─" * 56, "dim")
-    log("  RELATÓRIO DE ERROS", "title")
-    log("  " + "─" * 56, "dim")
-    log("")
-
-    total = 0
-    for i, (erro, qty) in enumerate(contagem.items(), 1):
-        if qty == 0:
-            tag = "dim"
-        elif qty < 5:
-            tag = "success"
-        elif qty < 20:
-            tag = "warning"
+    # Coleta tamanhos Elasticsearch
+    log("  ── Elasticsearch ──────────────────────────────────────", "dim")
+    elastic_bytes = {}
+    for nome, ip in ELASTICSEARCHS.items():
+        if stop_ev.is_set():
+            break
+        log(f"  → Conectando {nome} ({ip})...", "progress")
+        tamanho, erro = _obter_tamanho_elastic(nome, ip)
+        if erro:
+            log(f"  [!] {erro}", "warning")
         else:
-            tag = "error"
+            log(f"  ✓ {nome}: {tamanho:,} bytes", "success")
+        elastic_bytes[nome] = tamanho
 
-        bar = "█" * min(qty, 30)
-        log(f"  {i:02d}. {erro:<52} {qty:>5}   {bar}", tag)
-        total += qty
+    result_por_data = {}
 
-    log("")
-    log("  " + "─" * 56, "dim")
-    log(f"  Total de ocorrências encontradas: {total}", "title")
-    log("  " + "─" * 56, "dim")
-    if ftl_details:
+    for data in datas:
+        if stop_ev.is_set():
+            break
+
+        data_iso = data.strftime("%Y-%m-%d")
+        data_br  = data.strftime("%d/%m/%Y")
+
+        log(f"\n  {'─' * 54}", "dim")
+        log(f"  Data: {data_br}", "title")
+        log(f"  {'─' * 54}", "dim")
+
+        consolidado        = dict.fromkeys(PADROES.values(), 0)
+        ftl_consolidado    = {}
+        tamanhos_logs      = {}
+
+        for nome, ip in LIFERAYS.items():
+            if stop_ev.is_set():
+                break
+
+            log(f"\n  → Analisando XML {nome} ({data_iso})...", "info")
+            contagens, erro = _contar_padroes(nome, ip, data_iso)
+            if erro:
+                log(f"  [!] {erro}", "warning")
+            else:
+                for k, v in contagens["totais"].items():
+                    consolidado[k] += v
+                for tmpl, cnt in contagens["ftl_templates"].items():
+                    ftl_consolidado[tmpl] = ftl_consolidado.get(tmpl, 0) + cnt
+
+            log(f"  → Obtendo tamanho LOG {nome} ({data_iso})...", "info")
+            tamanho, erro = _obter_tamanho_liferay(nome, ip, data_iso)
+            if erro:
+                log(f"  [!] {erro}", "warning")
+            tamanhos_logs[nome] = tamanho
+
         log("")
-        log("  " + "─" * 56, "dim")
-        log("  FTL STACK TRACE — Detalhamento por template", "title")
-        log("  " + "─" * 56, "dim")
-        log("")
-        for loc, qty in sorted(ftl_details.items(), key=lambda x: -x[1]):
+        total_data = 0
+        for i, (nome_erro, qty) in enumerate(consolidado.items(), 1):
+            if qty == 0:
+                tag = "dim"
+            elif qty < 5:
+                tag = "success"
+            elif qty < 20:
+                tag = "warning"
+            else:
+                tag = "error"
             bar = "█" * min(qty, 30)
-            tag = "error" if qty >= 5 else "warning"
-            log(f"  {loc}  →  {qty:>4}x   {bar}", tag)
-        log("")
+            log(f"  {i:02d}. {nome_erro:<52} {qty:>5}   {bar}", tag)
+            total_data += qty
 
+        log("")
+        for nome in LIFERAYS:
+            tam = tamanhos_logs.get(nome)
+            if tam is None:
+                log(f"  LOG {nome}: arquivo não encontrado", "warning")
+            else:
+                log(f"  LOG {nome}: {tam / 1024 / 1024:.1f} MB", "info")
+
+        result_por_data[data_iso] = {
+            "contagem":      consolidado,
+            "tamanhos_logs": tamanhos_logs,
+            "ftl_templates": ftl_consolidado,
+        }
+
+    if stop_ev.is_set():
+        log("\n  [!] Execução interrompida.", "warning")
+        out_q.put(("DONE", None))
+        return
+
+    log(f"\n  {'─' * 54}", "dim")
+    log("  Tamanho em bytes — Elasticsearch:", "title")
     log("")
-    log("  Análise concluída com sucesso!", "success")
-    out_q.put(("RESULT_DATA", {"arquivo": log_path, "contagem": contagem, "total": total, "ftl_details": ftl_details}))
+    for nome, valor in elastic_bytes.items():
+        if valor is None:
+            log(f"  {nome}: erro ao obter", "warning")
+        else:
+            log(f"  {nome}: {valor:,} bytes", "info")
+
+    # Seção consolidada de FTL stack trace (todas as datas)
+    ftl_geral = {}
+    for info in result_por_data.values():
+        for tmpl, cnt in info["ftl_templates"].items():
+            ftl_geral[tmpl] = ftl_geral.get(tmpl, 0) + cnt
+
+    if ftl_geral:
+        log(f"\n  {'─' * 54}", "dim")
+        log("  Erros de FTL stack trace:", "title")
+        log("")
+        for tmpl, cnt in sorted(ftl_geral.items(), key=lambda x: -x[1]):
+            log(f"  {tmpl}  ({cnt}x)", "warning")
+
+    log("\n  Coleta concluída com sucesso!", "success")
+
+    out_q.put(("RESULT_DATA", {
+        "elastic_bytes": elastic_bytes,
+        "por_data":      result_por_data,
+    }))
     out_q.put(("DONE", None))

@@ -16,14 +16,14 @@ class AutoHubApp:
 
     NAV_ITEMS = [
         ("logs",    "📋", "Analisador de Logs",  "XML → Relatório de Erros"),
-        ("scraper", "🖼", "Scraper de Imagens",  "Extração de Imagens Web"),
-        ("amaweb",  "♿", "AMAWeb",              "Avaliador de Acessibilidade"),
+        ("scraper", "🗂️", "Scraper de Imagens",  "Extração de Imagens Web"),
+        ("amaweb",  "🕵️", "AMAWeb",              "Avaliador de Acessibilidade"),
     ]
 
     PAGE_META = {
         "logs":    ("📋  Analisador de Logs",  "XML → Relatório de Erros"),
-        "scraper": ("🖼  Scraper de Imagens",  "Extração de Imagens Web"),
-        "amaweb":  ("♿  AMAWeb",              "Avaliador de Acessibilidade"),
+        "scraper": ("🗂️  Scraper de Imagens",  "Extração de Imagens Web"),
+        "amaweb":  ("🕵️  AMAWeb",              "Avaliador de Acessibilidade"),
     }
 
     # ------------------------------------------------------------------ #
@@ -42,7 +42,7 @@ class AutoHubApp:
         self.out_q    = queue.Queue()
         self._logs_result   = None
 
-        self.logs_path      = tk.StringVar(value="logs_servidor/logs.xml")
+        self.logs_datas     = []
         self.scraper_links  = tk.StringVar(value="fontes/links.txt")
         self.scraper_output = tk.StringVar(value="galeria_noticias")
         self.ama_urls       = tk.StringVar(value="urls.txt")
@@ -316,30 +316,80 @@ class AutoHubApp:
     def _page_logs(self, parent):
         pg = self._make_page(parent)
         card = self._config_card(pg)
-        self._file_row(card, 1, "Arquivo logs.xml", self.logs_path, "file")
-        self._action_row(card, 2, self._exec_logs)
+
+        # ── Linha de entrada de data ──
+        tk.Label(card, text="Data (dd/mm/aaaa)", font=FONT_MAIN, bg=C["bg2"],
+                 fg=C["text2"], width=16, anchor="e").grid(
+                     row=1, column=0, sticky="e", padx=(0, 10), pady=5)
+
+        self._date_entry_var = tk.StringVar()
+        self._date_entry = tk.Entry(
+            card, textvariable=self._date_entry_var, font=FONT_MONO,
+            bg=C["bg4"], fg=C["text"], insertbackground=C["text"],
+            relief="flat", bd=0, width=14)
+        self._date_entry.grid(row=1, column=1, sticky="w", ipady=7, padx=(0, 8))
+        self._date_entry.bind("<Return>", lambda _: self._add_date())
+
+        btn_frm = tk.Frame(card, bg=C["bg2"])
+        btn_frm.grid(row=1, column=2, columnspan=2, pady=5, sticky="w")
+        tk.Button(btn_frm, text="+ Adicionar", font=FONT_SMALL,
+                  bg=C["accent"], fg="#ffffff", relief="flat", cursor="hand2",
+                  command=self._add_date, padx=10, pady=4).pack(side="left", padx=(0, 6))
+        tk.Button(btn_frm, text="✕ Remover", font=FONT_SMALL,
+                  bg=C["bg4"], fg=C["red"], relief="flat", cursor="hand2",
+                  command=self._remove_date, padx=10, pady=4).pack(side="left")
+
+        self._date_err_lbl = tk.Label(card, text="", font=FONT_SMALL,
+                                      bg=C["bg2"], fg=C["red"])
+        self._date_err_lbl.grid(row=2, column=1, columnspan=3, sticky="w")
+
+        # ── Lista de datas adicionadas ──
+        lb_frm = tk.Frame(card, bg=C["bg2"])
+        lb_frm.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(2, 6))
+        self._dates_lb = tk.Listbox(
+            lb_frm, font=FONT_MONO, bg=C["bg4"], fg=C["text"],
+            selectbackground=C["accent"], selectforeground="#ffffff",
+            relief="flat", height=3, bd=0)
+        self._dates_lb.pack(fill="x", padx=0)
+
+        self._action_row(card, 4, self._exec_logs)
 
         dl_frm = tk.Frame(card, bg=C["bg2"])
-        dl_frm.grid(row=3, column=0, columnspan=4, sticky="w", pady=(6, 0))
+        dl_frm.grid(row=5, column=0, columnspan=4, sticky="w", pady=(6, 0))
         self._logs_download_btn = tk.Button(
-            dl_frm,
-            text="⬇   Baixar resultado (.txt)",
-            font=("Segoe UI", 10),
-            bg=C["bg4"],
-            fg=C["text3"],
-            activebackground=C["green"],
-            activeforeground="#ffffff",
-            relief="flat",
-            cursor="hand2",
-            padx=18,
-            pady=9,
-            state="disabled",
-            command=self._download_logs,
+            dl_frm, text="⬇   Baixar resultado (.txt)",
+            font=("Segoe UI", 10), bg=C["bg4"], fg=C["text3"],
+            activebackground=C["green"], activeforeground="#ffffff",
+            relief="flat", cursor="hand2", padx=18, pady=9,
+            state="disabled", command=self._download_logs,
         )
         self._logs_download_btn.pack(side="left")
 
         self.term_logs = self._terminal_card(pg, "logs")
         return pg
+
+    def _add_date(self):
+        entrada = self._date_entry_var.get().strip()
+        try:
+            d = datetime.strptime(entrada, "%d/%m/%Y")
+        except ValueError:
+            self._date_err_lbl.configure(text="Data inválida. Use dd/mm/aaaa.")
+            return
+        if any(existing == d for existing in self.logs_datas):
+            self._date_err_lbl.configure(text="Data já adicionada.")
+            return
+        self.logs_datas.append(d)
+        self._dates_lb.insert("end", d.strftime("%d/%m/%Y"))
+        self._date_entry_var.set("")
+        self._date_err_lbl.configure(text="")
+
+    def _remove_date(self):
+        sel = self._dates_lb.curselection()
+        if not sel:
+            return
+        idx = sel[0]
+        self._dates_lb.delete(idx)
+        self.logs_datas.pop(idx)
 
     def _page_scraper(self, parent):
         pg = self._make_page(parent)
@@ -409,9 +459,13 @@ class AutoHubApp:
                          daemon=True).start()
 
     def _exec_logs(self):
+        if not self.logs_datas:
+            self._date_err_lbl.configure(text="Adicione ao menos uma data.")
+            return
+        self._date_err_lbl.configure(text="")
         self._logs_result = None
         self._logs_download_btn.configure(state="disabled", fg=C["text3"])
-        self._start(run_logs, self.logs_path.get())
+        self._start(run_logs, list(self.logs_datas))
 
     def _exec_scraper(self):
         self._start(run_scraper, self.scraper_links.get(), self.scraper_output.get())
@@ -432,36 +486,27 @@ class AutoHubApp:
         data = self._logs_result
         ts   = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         lines = [
-            "AutoHub Pro — Relatório de Logs",
-            f"Gerado em:          {ts}",
-            f"Arquivo analisado:  {data['arquivo']}",
-            "─" * 64,
+            "AutoHub Pro — Relatório de Logs SSH",
+            f"Gerado em: {ts}",
+            "=" * 80,
             "",
         ]
-        for i, (erro, qty) in enumerate(data["contagem"].items(), 1):
-            lines.append(f"  {i:02d}. {erro} = {qty}")
-        lines += [
-            "",
-            "─" * 64,
-            f"  Total de ocorrências: {data['total']}",
-            "─" * 64,
-        ]
-        if data.get("ftl_details"):
-            lines += [
-                "",
-                "─" * 64,
-                "  FTL STACK TRACE — Detalhamento por template",
-                "─" * 64,
-                "",
-            ]
-            for loc, qty in sorted(data["ftl_details"].items(), key=lambda x: -x[1]):
-                lines.append(f"  {loc} = {qty}")
-            lines += [
-                "",
-                "─" * 64,
-                f"  Total de ocorrências FTL: {sum(data['ftl_details'].values())}",
-                "─" * 64,
-            ]
+        for data_iso, info in data["por_data"].items():
+            dt = datetime.strptime(data_iso, "%Y-%m-%d")
+            lines += [f"Data: {dt.strftime('%d/%m/%Y')}", "─" * 40]
+            for i, (erro, qty) in enumerate(info["contagem"].items(), 1):
+                lines.append(f"  {i:02d}. {erro} = {qty}")
+            lines.append("")
+            for nome, tam in info["tamanhos_logs"].items():
+                if tam is None:
+                    lines.append(f"  LOG {nome}: arquivo não encontrado")
+                else:
+                    lines.append(f"  LOG {nome}: {tam / 1024 / 1024:.1f} MB")
+            lines.append("")
+        lines += ["", "─" * 80, "Tamanho em bytes — Elasticsearch:", ""]
+        for nome, valor in data["elastic_bytes"].items():
+            lines.append(f"  {nome}: {valor if valor is not None else 'erro ao obter'}")
+        lines.append("")
         with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
         self._set_status(f"Salvo: {os.path.basename(path)}", C["green"])

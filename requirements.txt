@@ -11,7 +11,11 @@ tqdm>=4.66.0
 # --- AMAWeb ---
 selenium>=4.18.0
 
+# --- Analisador de Logs SSH ---
+paramiko>=3.0.0
+
 # --- Utilitários ---
 pillow>=10.0.0
+python-dotenv>=1.0.0
 
 # tkinter já vem incluído no Python padrão (não precisa instalar)

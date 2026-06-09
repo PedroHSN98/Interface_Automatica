@@ -1,0 +1,15 @@
+# Credenciais — nunca enviar ao repositório
+.env
+
+# Ambiente virtual
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Arquivos gerados
+*.xlsx
+*.log
+galeria_noticias/
