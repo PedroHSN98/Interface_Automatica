@@ -1,6 +1,6 @@
 # AutoHub Pro — Central de Automações
 
-Interface desktop para automações internas, construída com Python + Tkinter.
+Central de automações internas com **duas interfaces**: um app desktop (Tkinter) e uma interface web (Flask), ambas rodando sobre os mesmos módulos de automação em Python.
 
 ---
 
@@ -9,133 +9,176 @@ Interface desktop para automações internas, construída com Python + Tkinter.
 | Item | Detalhe |
 |---|---|
 | Linguagem | Python 3.13 |
-| Interface gráfica | Tkinter (nativo do Python) |
+| Interface desktop | Tkinter (nativo do Python) |
+| Interface web | Flask + Server-Sent Events (log em tempo real no navegador) |
 | Sistema operacional | Windows (10 / 11) |
-| Fonte de UI | Segoe UI (nativa do Windows) |
-| Fonte do terminal | Consolas (nativa do Windows) |
+| Fonte de UI (desktop) | Segoe UI / Consolas (nativas do Windows) |
 
 ---
 
 ## Funcionalidades
 
-### 1. Analisador de Logs
-Lê um arquivo XML no formato **log4j** e conta ocorrências de padrões de erro predefinidos, exibindo um relatório visual com barras de frequência.
+O app é organizado em módulos, cada um acessível tanto pela janela desktop quanto pela página web (`http://localhost:5000`):
 
-- **Entrada:** arquivo `logs.xml`
-- **Saída:** relatório no terminal da interface
+### 📊 Dashboard
+Visão geral do sistema: status das últimas execuções de cada módulo, atalhos rápidos.
 
-### 2. Scraper de Imagens
-Varre URLs listadas em um arquivo `.txt`, baixa imagens com tamanho entre **40 KB e 2 MB** e gera uma planilha Excel com o relatório de execução.
+### 📋 Analisador de Logs
+Conecta via **SSH** (usuário/senha do `.env`) aos servidores Elasticsearch e Liferay configurados, executa `grep` remoto por um conjunto de padrões de erro conhecidos (exceptions, LDAP, broken pipe, templates FTL, etc.) e monta um relatório de ocorrências por data/servidor.
 
-- **Entrada:** arquivo `links.txt` com uma URL por linha
-- **Saída:** imagens salvas na pasta configurada + `registro_noticias.xlsx`
-- Paralelismo de 5 threads simultâneas por URL
+- **Entrada:** datas (dd/mm/aaaa) + seleção de quais servidores Elastic/Liferay consultar
+- **Saída:** relatório no terminal da interface, com exportação para `.txt` e `.xlsx`
 
-### 3. AMAWeb — Avaliador de Acessibilidade
-Acessa cada URL listada no portal `amaweb.unifesp.br`, extrai a nota de acessibilidade exibida na página e grava os resultados em uma planilha Excel. Usa o Chrome no modo **headless**.
+### 🗂️ Scraper de Imagens
+Varre uma lista de URLs (`.txt`), baixa imagens dentro da faixa de **40 KB a 2 MB**, evita duplicadas (hash) e gera um relatório em Excel.
 
-- **Entrada:** arquivo `urls.txt` com um domínio/URL por linha
-- **Saída:** planilha `.xlsx` com URL e nota de cada site
+- **Entrada:** arquivo com uma URL por linha
+- **Saída:** imagens salvas na pasta configurada + planilha `registro_noticias.xlsx`
+- Paralelismo de 5 threads simultâneas
+
+### 🕵️ AMAWeb — Avaliador de Acessibilidade
+Acessa o portal `amaweb.unifesp.br` para cada URL da lista, extrai a nota de acessibilidade via Chrome **headless** (Selenium) e grava um histórico comparável entre execuções.
+
+- **Entrada:** arquivo com uma URL/domínio por linha + nota mínima aceitável (threshold)
+- **Saída:** planilha `.xlsx` com nota por site + `historico_amaweb.json`
 - Timeout de 180 s por site
+
+### 📡 Monitor de Uptime
+Faz ping HTTP contínuo em uma lista de sites, em intervalo configurável, sinalizando quando um site sai do ar ou volta a responder.
+
+- **Entrada:** arquivo de URLs + intervalo em segundos
+- **Saída:** log contínuo no terminal da interface
+
+### 📑 Extrator de Tabelas
+Recebe uma URL, extrai todas as tabelas HTML da página e exporta para uma planilha Excel formatada.
+
+- **Entrada:** URL da página
+- **Saída:** planilha `.xlsx` com as tabelas extraídas
+
+### 🔄 Comparador
+Tira um "retrato" (snapshot com hash) do conteúdo de uma lista de páginas e, a cada nova execução, aponta o que mudou desde a última vez.
+
+- **Entrada:** arquivo com URLs a monitorar
+- **Saída:** relatório de mudanças + `snapshots.json` para comparações futuras
+
+### 📄 Relatório Consolidado
+Junta os dados de todos os módulos (logs, scraper, AMAWeb, uptime etc.) em uma única planilha Excel formatada, pronta para envio/arquivamento.
+
+- **Saída:** `relatorio_consolidado.xlsx`
+
+### 📜 Histórico
+Tela com o histórico das últimas execuções de todos os módulos (status, data/hora e detalhes), gravado em `historico.json`.
+
+---
+
+## Documentação em PDF
+
+Além deste README, o projeto inclui **dois manuais em PDF prontos**, gerados automaticamente e versionados no repositório — úteis para quem for instalar ou usar o AutoHub Pro sem precisar ler o código:
+
+| Arquivo | Conteúdo |
+|---|---|
+| **`AutoHub_Pro_Manual_Instalacao.pdf`** | Passo a passo completo de **instalação** do zero (pré-requisitos, ambiente virtual, dependências, execução) |
+| **`AutoHub_Pro_Documentacao.pdf`** | Documentação **funcional** do projeto: o que cada módulo faz, entradas e saídas |
+
+Esses PDFs podem ser regenerados a qualquer momento (útil após alterar features), com:
+
+```powershell
+python gerar_pdf.py             # regenera o Manual de Instalação
+python gerar_documentacao.py    # regenera a Documentação do Projeto
+```
+
+> Ambos os scripts usam a biblioteca `fpdf` (`pip install fpdf2`), não incluída no `requirements.txt` por não ser necessária para rodar o app — apenas para regerar os PDFs.
 
 ---
 
 ## Pré-requisitos
 
 ### 1. Python 3.13
-
-Baixe em [python.org/downloads](https://www.python.org/downloads/).
-
-Durante a instalação marque a opção **"Add Python to PATH"**.
+Baixe em [python.org/downloads](https://www.python.org/downloads/). Durante a instalação marque **"Add Python to PATH"**.
 
 Verifique após instalar:
-```
+```powershell
 python --version
 ```
 
 ### 2. Google Chrome
-
-Instale a versão mais recente do Chrome em [google.com/chrome](https://www.google.com/chrome/).
+Necessário apenas para o módulo **AMAWeb**. Instale em [google.com/chrome](https://www.google.com/chrome/).
 
 ### 3. ChromeDriver
+Deve corresponder à versão do Chrome instalado. O projeto usa `selenium>=4.18`, que já resolve o driver automaticamente na maioria dos casos. Se não funcionar, baixe manualmente em [chromedriver.chromium.org](https://chromedriver.chromium.org/downloads) e coloque o executável em uma pasta do PATH (ex: `C:\Windows\System32`).
 
-O ChromeDriver deve estar na versão **correspondente ao Chrome instalado** e acessível no PATH do sistema.
-
-**Como instalar via pip (recomendado):**
-```
-pip install webdriver-manager
-```
-> O projeto já usa `selenium>=4.18` com gerenciamento automático de driver.  
-> Se o driver não for encontrado automaticamente, baixe manualmente em [chromedriver.chromium.org](https://chromedriver.chromium.org/downloads) e coloque o executável em uma pasta que esteja no PATH (ex: `C:\Windows\System32`).
+### 4. Credenciais SSH (apenas para o Analisador de Logs)
+O módulo de logs precisa de usuário/senha para conectar via SSH aos servidores Elasticsearch/Liferay. Essas credenciais **nunca** vão para o Git — ficam em um arquivo `.env` local (veja Passo 6 abaixo).
 
 ---
 
-## Como Rodar em Outro Computador
+## Passo a Passo — Instalação
 
-### Passo 1 — Copiar o projeto
-
-Copie toda a pasta `interface_automacao` para o novo computador. **Não copie a pasta `.venv`** — ela será recriada.
-
-Estrutura esperada:
+### Passo 1 — Clonar/copiar o projeto
+```powershell
+git clone https://github.com/PedroHSN98/Interface_Automatica.git
+cd Interface_Automatica
 ```
-interface_automacao/
-├── app.py
-├── criar_atalho.py
-├── requirements.txt
-├── automations/
-│   ├── amaweb.py
-│   ├── logs.py
-│   ├── scraper.py
-│   └── __init__.py
-├── config/
-│   ├── theme.py
-│   └── __init__.py
-├── ui/
-│   ├── app.py
-│   ├── utils.py
-│   └── __init__.py
-└── assets/          (criado automaticamente)
-```
+Se for copiar a pasta manualmente entre computadores, **não copie `.venv`** — ela será recriada.
 
 ### Passo 2 — Criar o ambiente virtual
-
-Abra o terminal (PowerShell ou Prompt) dentro da pasta do projeto:
-
 ```powershell
 python -m venv .venv
 ```
 
 ### Passo 3 — Ativar o ambiente virtual
-
 ```powershell
 .venv\Scripts\activate
 ```
 
 ### Passo 4 — Instalar as dependências
-
 ```powershell
 pip install -r requirements.txt
 ```
 
-### Passo 5 — Executar o aplicativo
+### Passo 5 — Configurar variáveis de ambiente
+Copie o arquivo de exemplo e preencha com suas credenciais:
+```powershell
+copy .env.example .env
+```
+Edite `.env`:
+```
+LIFERAY_USUARIO=seu_usuario_aqui
+LIFERAY_SENHA=sua_senha_aqui
+```
 
+### Passo 6 — Executar
+
+**Interface Desktop (Tkinter):**
 ```powershell
 python app.py
 ```
+
+**Interface Web (Flask):**
+```powershell
+run_web.bat
+```
+ou manualmente:
+```powershell
+python web\server.py
+```
+Depois acesse **http://localhost:5000** no navegador (abre automaticamente).
 
 ---
 
 ## Criar Atalho na Área de Trabalho (opcional)
 
 Com o ambiente virtual ativado, execute:
-
 ```powershell
 python criar_atalho.py
 ```
+Isso gera o ícone (`assets/icon.ico`) e cria `AutoHub Pro.lnk` na Área de Trabalho, apontando para `pythonw.exe` (sem janela de console).
 
-Isso irá:
-- Gerar o ícone `assets/icon.ico`
-- Criar um atalho `AutoHub Pro.lnk` na Área de Trabalho apontando para `pythonw.exe` (sem janela de console)
+---
+
+## Configuração
+
+As preferências de cada módulo (caminhos de arquivos, tema, intervalos, thresholds) ficam salvas em `config.json`, na raiz do projeto, e são editáveis diretamente pela interface (desktop ou web) — não é necessário editar esse arquivo manualmente. Ele é recriado com valores padrão caso não exista.
 
 ---
 
@@ -143,16 +186,19 @@ Isso irá:
 
 Todas listadas em `requirements.txt`:
 
-| Pacote | Versão mínima | Para que serve |
-|---|---|---|
-| `requests` | 2.31.0 | Requisições HTTP (scraper e amaweb) |
-| `beautifulsoup4` | 4.12.0 | Parse de HTML para extração de imagens |
-| `pandas` | 2.0.0 | Geração e leitura de planilhas Excel |
-| `openpyxl` | 3.1.0 | Leitura/escrita de arquivos `.xlsx` |
-| `tqdm` | 4.66.0 | Barras de progresso em terminal |
-| `selenium` | 4.18.0 | Automação do Chrome (AMAWeb) |
-| `pillow` | 10.0.0 | Geração do ícone `.ico` do atalho |
-| `tkinter` | — | Interface gráfica (já incluso no Python) |
+| Pacote | Para que serve |
+|---|---|
+| `requests` | Requisições HTTP (scraper, amaweb, uptime, extrator, comparador) |
+| `beautifulsoup4` | Parse de HTML (scraper, extrator, comparador) |
+| `pandas` / `openpyxl` | Geração e leitura de planilhas Excel |
+| `tqdm` | Barras de progresso em terminal |
+| `selenium` | Automação do Chrome (AMAWeb) |
+| `paramiko` | Conexão SSH aos servidores (Analisador de Logs) |
+| `python-dotenv` | Carrega credenciais do `.env` |
+| `pillow` | Geração do ícone `.ico` do atalho |
+| `plyer` | Notificações nativas do Windows |
+| `flask` | Interface web |
+| `tkinter` | Interface desktop (já incluso no Python) |
 
 Instale tudo de uma vez:
 ```powershell
@@ -161,46 +207,60 @@ pip install -r requirements.txt
 
 ---
 
-## Estrutura de Arquivos de Entrada
+## Estrutura do Projeto
 
-### Analisador de Logs
 ```
-logs_servidor/
-└── logs.xml       ← arquivo XML no formato log4j
+interface_automacao/
+├── app.py                    # ponto de entrada da interface desktop
+├── criar_atalho.py           # gera atalho + ícone na Área de Trabalho
+├── gerar_pdf.py               # gera AutoHub_Pro_Manual_Instalacao.pdf
+├── gerar_documentacao.py      # gera AutoHub_Pro_Documentacao.pdf
+├── run_web.bat                # inicia a interface web
+├── requirements.txt
+├── .env.example                # modelo de credenciais (copiar para .env)
+├── config.json                 # preferências salvas pela interface
+├── historico.json              # histórico de execuções
+├── historico_amaweb.json       # histórico de notas do AMAWeb
+├── automations/                # lógica de cada módulo
+│   ├── logs.py
+│   ├── scraper.py
+│   ├── amaweb.py
+│   ├── uptime.py
+│   ├── extrator.py
+│   ├── comparador.py
+│   └── relatorio.py
+├── config/
+│   ├── settings.py             # load/save do config.json
+│   └── theme.py                # tema claro/escuro da UI desktop
+├── ui/
+│   └── app.py                  # janela Tkinter (todas as páginas/abas)
+├── web/
+│   ├── server.py                # rotas Flask
+│   ├── templates/index.html
+│   └── static/ (app.js, style.css)
+├── utils/
+│   ├── historico.py             # registra/lista execuções
+│   └── notificacao.py           # notificações do Windows
+├── assets/                      # ícone gerado (criar_atalho.py)
+├── result-txt/                  # arquivos de entrada/saída de exemplo
+└── galeria_noticias/             # saída padrão do Scraper
 ```
-
-### Scraper de Imagens
-```
-fontes/
-└── links.txt      ← uma URL por linha
-```
-
-### AMAWeb
-```
-urls.txt           ← um domínio ou URL por linha
-```
-
----
-
-## Arquivos de Saída
-
-| Módulo | Arquivo gerado |
-|---|---|
-| Scraper | `galeria_noticias/registro_noticias.xlsx` + imagens `.jpg` |
-| AMAWeb | `resultado.xlsx` (caminho configurável na interface) |
 
 ---
 
 ## Solução de Problemas
 
 **`ModuleNotFoundError`** ao abrir o app
-> O ambiente virtual não está ativo ou as dependências não foram instaladas. Execute os Passos 3 e 4 novamente.
+> O ambiente virtual não está ativo ou as dependências não foram instaladas. Repita os Passos 3 e 4.
 
-**`ChromeDriver não iniciado`**
-> O Google Chrome não está instalado, ou o ChromeDriver está desatualizado. Instale/atualize o Chrome e reinstale o selenium: `pip install --upgrade selenium`.
+**`ChromeDriver não iniciado`** (módulo AMAWeb)
+> O Google Chrome não está instalado, ou o driver está desatualizado. Instale/atualize o Chrome e reinstale o selenium: `pip install --upgrade selenium`.
+
+**Falha de conexão SSH** (módulo Analisador de Logs)
+> Verifique se `.env` existe e contém `LIFERAY_USUARIO`/`LIFERAY_SENHA` válidos, e se a máquina tem acesso de rede aos servidores internos.
 
 **Tkinter não encontrado**
 > Reinstale o Python marcando a opção **"tcl/tk and IDLE"** durante a instalação.
 
-**Fontes diferentes no Windows 10**
-> A interface usa Segoe UI e Consolas — ambas nativas do Windows. Se estiver em outro SO, as fontes serão substituídas pelo sistema automaticamente.
+**Interface web não abre**
+> Confira se a porta 5000 está livre e se o Flask foi instalado (`pip install flask`). O `run_web.bat` instala automaticamente se faltar.
