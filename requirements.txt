@@ -1,4 +1,4 @@
-# AutoHub Pro — Dependências
+# AutoHub Pro - Dependencias
 # Instale com: pip install -r requirements.txt
 
 # --- Scraper de Imagens ---
@@ -14,8 +14,14 @@ selenium>=4.18.0
 # --- Analisador de Logs SSH ---
 paramiko>=3.0.0
 
-# --- Utilitários ---
+# --- Utilitarios ---
 pillow>=10.0.0
 python-dotenv>=1.0.0
 
-# tkinter já vem incluído no Python padrão (não precisa instalar)
+# --- Notificacoes do Windows ---
+plyer>=2.1.0
+
+# tkinter ja vem incluido no Python padrao (nao precisa instalar)
+
+# --- Interface Web ---
+flask>=3.0.0

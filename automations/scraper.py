@@ -1,4 +1,6 @@
 import os
+import json
+import hashlib
 import queue
 import threading
 from datetime import datetime
@@ -8,6 +10,7 @@ from urllib.parse import urljoin, urlparse
 
 TAMANHO_MIN = 40960     # 40 KB
 TAMANHO_MAX = 2097152   # 2 MB
+_HASHES_FILE = ".hashes.json"
 
 
 def _extrair_portal(url: str) -> str:
@@ -22,24 +25,44 @@ def _extrair_portal(url: str) -> str:
         return "ERRO_URL"
 
 
-def _baixar_imagem(url_img: str, url_origem: str, output_folder: str, sites_pesados: set):
+def _load_hashes(output_folder: str) -> set:
+    path = os.path.join(output_folder, _HASHES_FILE)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+
+
+def _save_hashes(output_folder: str, hashes: set) -> None:
+    path = os.path.join(output_folder, _HASHES_FILE)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(list(hashes), f)
+
+
+def _baixar_imagem(url_img: str, url_origem: str, output_folder: str,
+                   sites_pesados: set, hashes_conhecidos: set) -> tuple[bool, bool, str | None]:
+    """Retorna (baixou, fora_padrao, hash_novo)."""
     try:
         import requests
         head = requests.head(url_img, timeout=5, allow_redirects=True)
         tam = int(head.headers.get("Content-Length", 0))
         if tam > TAMANHO_MAX:
             sites_pesados.add(url_origem)
-            return False, True
+            return False, True, None
         if TAMANHO_MIN <= tam <= TAMANHO_MAX:
             res = requests.get(url_img, timeout=10)
             if res.status_code == 200:
-                nome = f"img_{abs(hash(url_img))}.jpg"
+                img_hash = hashlib.md5(res.content).hexdigest()
+                if img_hash in hashes_conhecidos:
+                    return False, False, None  # duplicata
+                nome = f"img_{img_hash}.jpg"
                 with open(os.path.join(output_folder, nome), "wb") as f:
                     f.write(res.content)
-                return True, False
-        return False, False
+                return True, False, img_hash
+        return False, False, None
     except Exception:
-        return False, False
+        return False, False, None
 
 
 def run_scraper(links_path: str, output_folder: str, out_q: queue.Queue, stop_ev: threading.Event):
@@ -53,7 +76,7 @@ def run_scraper(links_path: str, output_folder: str, out_q: queue.Queue, stop_ev
         from openpyxl import load_workbook
         from openpyxl.styles import Font, Alignment, PatternFill
     except ImportError as e:
-        log(f"  [ERRO] Dependência não instalada: {e}", "error")
+        log(f"  [ERRO] Dependencia nao instalada: {e}", "error")
         log("  Execute: pip install requests beautifulsoup4 pandas openpyxl", "warning")
         out_q.put(("DONE", None))
         return
@@ -65,7 +88,7 @@ def run_scraper(links_path: str, output_folder: str, out_q: queue.Queue, stop_ev
         os.makedirs(output_folder)
 
     if not os.path.exists(links_path):
-        log(f"  [ERRO] Arquivo não encontrado: {links_path}", "error")
+        log(f"  [ERRO] Arquivo nao encontrado: {links_path}", "error")
         out_q.put(("DONE", None))
         return
 
@@ -77,34 +100,48 @@ def run_scraper(links_path: str, output_folder: str, out_q: queue.Queue, stop_ev
         out_q.put(("DONE", None))
         return
 
-    log(f"  Iniciando varredura em {len(urls)} links...", "info")
-    log(f"  Pasta de saída: {output_folder}", "info")
-    log(f"  Filtro de tamanho: {TAMANHO_MIN // 1024}KB — {TAMANHO_MAX // 1024 // 1024}MB", "info")
+    # Carrega hashes de imagens ja baixadas para deteccao de duplicatas
+    hashes_conhecidos = _load_hashes(output_folder)
+    hashes_novos: set = set()
+
+    log(f"  Iniciando varredura em {len(urls)} link(s)...", "info")
+    log(f"  Pasta de saida: {output_folder}", "info")
+    log(f"  Filtro de tamanho: {TAMANHO_MIN // 1024}KB - {TAMANHO_MAX // 1024 // 1024}MB", "info")
+    log(f"  Hashes conhecidos (duplicatas a ignorar): {len(hashes_conhecidos)}", "dim")
     log("")
 
     relatorio = []
-
     for i, url in enumerate(urls, 1):
         if stop_ev.is_set():
-            log("\n  [!] Execução interrompida.", "warning")
+            log("\n  [!] Execucao interrompida.", "warning")
             break
 
         nome_portal = _extrair_portal(url)
         pct = i / len(urls)
-        barra = "█" * int(30 * pct) + "░" * (30 - int(30 * pct))
+        barra = "X" * int(30 * pct) + "." * (30 - int(30 * pct))
         out_q.put(("progress", f"  [{barra}] {i}/{len(urls)}  {nome_portal}\n"))
+        out_q.put(("PROGRESS", pct))
 
         try:
             res = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
             sopa = BeautifulSoup(res.text, "html.parser")
             imgs = [urljoin(url, img.get("src")) for img in sopa.find_all("img") if img.get("src")]
 
+            todos_hashes = hashes_conhecidos | hashes_novos
+
+            def _baixar(img_url, _url=url, _th=todos_hashes):
+                return _baixar_imagem(img_url, _url, output_folder, sites_pesados, _th)
+
             with ThreadPoolExecutor(max_workers=5) as ex:
-                resultados = list(ex.map(
-                    lambda img: _baixar_imagem(img, url, output_folder, sites_pesados), imgs
-                ))
+                resultados = list(ex.map(_baixar, imgs))
+
             sucessos = sum(1 for r in resultados if r[0])
             fora     = sum(1 for r in resultados if r[1])
+
+            # Registra hashes novos
+            for baixou, _, h in resultados:
+                if baixou and h:
+                    hashes_novos.add(h)
 
             tag = "success" if sucessos > 0 else "dim"
             log(f"      {nome_portal:<30} encontradas={len(imgs):>3}  baixadas={sucessos:>3}  fora={fora:>3}", tag)
@@ -118,7 +155,10 @@ def run_scraper(links_path: str, output_folder: str, out_q: queue.Queue, stop_ev
                 "Fora_Padrao": fora,
             })
         except Exception as e:
-            log(f"      [ERRO] {url[:60]}... → {e}", "error")
+            log(f"      [ERRO] {url[:60]}... -> {e}", "error")
+
+    # Persiste hashes acumulados
+    _save_hashes(output_folder, hashes_conhecidos | hashes_novos)
 
     if relatorio:
         df = pd.DataFrame(relatorio)
@@ -144,18 +184,28 @@ def run_scraper(links_path: str, output_folder: str, out_q: queue.Queue, stop_ev
         maximo        = max(r["Baixadas"] for r in relatorio)
 
         log("")
-        log("  " + "═" * 56, "dim")
+        log("  " + "=" * 56, "dim")
         log("  VARREDURA FINALIZADA!", "title")
         log(f"  Total de imagens baixadas: {total_baixado}", "success")
-        log(f"  Recorde em um único portal: {maximo}", "success")
+        log(f"  Recorde em um unico portal: {maximo}", "success")
+        log(f"  Duplicatas ignoradas: {len(hashes_novos)} novas / {len(hashes_conhecidos)} ja conhecidas", "dim")
         log(f"  Planilha salva: {ARQUIVO_DADOS}", "info")
 
         if sites_pesados:
             log("")
-            log("  ALERTA — Imagens acima de 2MB detectadas em:", "warning")
+            log("  ALERTA - Imagens acima de 2MB detectadas em:", "warning")
             for site in sites_pesados:
-                log(f"    → {site}", "warning")
+                log(f"    -> {site}", "warning")
 
-        log("  " + "═" * 56, "dim")
+        log("  " + "=" * 56, "dim")
 
+    out_q.put(("PROGRESS", 1.0))
+    out_q.put(("DONE_SCRAPER", output_folder))
+    out_q.put(("HISTORY", {
+        "modulo": "scraper",
+        "status": "sucesso",
+        "detalhes": f"{len(relatorio)} portais | {sum(r['Baixadas'] for r in relatorio)} imagens baixadas",
+    }))
     out_q.put(("DONE", None))
+
+

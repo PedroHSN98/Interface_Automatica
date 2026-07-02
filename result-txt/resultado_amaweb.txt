@@ -1,0 +1,65 @@
+AutoHub Pro - Resultado AMAWeb
+Gerado em: 01/07/2026 08:14:36
+======================================================================
+
+URL                                                        NOTA
+----------------------------------------------------------------------
+www.mti.mt.gov.br                                           7.0
+marketplace.mti.mt.gov.br                                   7.3
+useia.mti.mt.gov.br                                         8.4
+www.secom.mt.gov.br                                         5.3
+www.detran.mt.gov.br                                        6.7
+transparencia.detran.mt.gov.br                              6.7
+www.pge.mt.gov.br                                           7.3
+www.cge.mt.gov.br                                           6.1
+www.transparencia.mt.gov.br                                 7.6
+www.ouvidoria.mt.gov.br                                     7.1
+www3.seduc.mt.gov.br                                        7.1
+www.cee.mt.gov.br                                           7.2
+cos.seduc.mt.gov.br                                         7.9
+www.aprendizagemconectada.mt.gov.br                         7.3
+www5.sefaz.mt.gov.br                                        9.0
+www.convenios.mt.gov.br                                     7.8
+www.portaldoconhecimento.mt.gov.br                          7.8
+portal.fiplan.mt.gov.br                                     7.7
+www.escoladareformatributaria.mt.gov.br                     7.9
+www.sesp.mt.gov.br                                          6.6
+www.ager.mt.gov.br                                          7.4
+www.bombeiros.mt.gov.br                                     6.7
+www.defesacivil.mt.gov.br                                   6.7
+www.mtprev.mt.gov.br                                        6.5
+www.pjc.mt.gov.br                                           7.2
+www.pm.mt.gov.br                                            7.2
+www.politec.mt.gov.br                                       6.7
+www.setasc.mt.gov.br                                        6.8
+www.cedca.mt.gov.br                                         7.7
+www.sinfra.mt.gov.br                                        6.6
+www.sinfralog.mt.gov.br                                     7.7
+www.procon.mt.gov.br                                        6.4
+www.secel.mt.gov.br                                         6.6
+www.secel.mt.gov.br                                         6.6
+www.empaer.mt.gov.br                                        6.9
+www.fapemat.mt.gov.br                                       6.2
+www.funac.mt.gov.br                                         7.4
+www.indea.mt.gov.br                                         6.6
+www.intermat.mt.gov.br                                      7.1
+www.agriculturafamiliar.mt.gov.br                           7.0
+www.secitec.mt.gov.br                                       7.2
+www.sedec.mt.gov.br                                         7.1
+www.casacivil.mt.gov.br                                     7.8
+www.metamat.mt.gov.br                                       6.2
+acadepol.pjc.mt.gov.br                                      7.2
+www.redecidada.mt.gov.br                                    6.2
+apmt.mt.gov.br                                              7.2
+www.sejus.mt.gov.br                                      Timeout / Erro
+www.ipem.mt.gov.br                                          8.1
+www.seplag.mt.gov.br/                                       8.5
+mti2.mti.mt.gov.br                                          7.8
+detran2.mti.mt.gov.br                                       8.2
+https://mtsaude.mti.mt.gov.br/                           Timeout / Erro
+https://mtprev2.mti.mt.gov.br/                           Timeout / Erro
+intranet.detran.mt.gov.br                                   7.9
+intranet.mti.mt.gov.br                                      7.9
+
+----------------------------------------------------------------------
+Total de sites: 56

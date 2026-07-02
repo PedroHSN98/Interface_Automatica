@@ -1,0 +1,116 @@
+[
+  {
+    "modulo": "scraper",
+    "data": "2026-07-02 09:30:47",
+    "status": "sucesso",
+    "detalhes": "46 portais | 1 imagens baixadas"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-07-02 09:27:06",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 45752 ocorrencias no total"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-07-02 09:24:59",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 22777 ocorrencias no total"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-07-02 09:23:39",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 22777 ocorrencias no total"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-07-02 09:18:32",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 45752 ocorrencias no total"
+  },
+  {
+    "modulo": "amaweb",
+    "data": "2026-07-01 08:11:08",
+    "status": "sucesso",
+    "detalhes": "56 sites | media 7.19 | 48 abaixo de 8.0"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-06-30 08:10:13",
+    "status": "sucesso",
+    "detalhes": "101 portais | 197 imagens baixadas"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-06-30 07:57:40",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 38126 ocorrencias no total"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-06-26 08:55:32",
+    "status": "sucesso",
+    "detalhes": "65 portais | 88 imagens baixadas"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-06-26 07:16:33",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 34478 ocorrencias no total"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-06-24 07:36:26",
+    "status": "sucesso",
+    "detalhes": "67 portais | 100 imagens baixadas"
+  },
+  {
+    "modulo": "amaweb",
+    "data": "2026-06-22 11:04:50",
+    "status": "sucesso",
+    "detalhes": "56 sites | media 7.16 | 50 abaixo de 8.0"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-06-22 06:55:16",
+    "status": "sucesso",
+    "detalhes": "3 data(s) | 100792 ocorrencias no total"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-06-18 07:48:43",
+    "status": "sucesso",
+    "detalhes": "59 portais | 102 imagens baixadas"
+  },
+  {
+    "modulo": "amaweb",
+    "data": "2026-06-15 08:08:38",
+    "status": "sucesso",
+    "detalhes": "56 sites | media 7.13 | 50 abaixo de 8.0"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-06-12 07:56:09",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 42820 ocorrencias no total"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-06-11 10:12:22",
+    "status": "sucesso",
+    "detalhes": "2 data(s) | 121454 ocorrencias no total"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-06-11 08:01:13",
+    "status": "sucesso",
+    "detalhes": "53 portais | 97 imagens baixadas"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-06-11 07:56:56",
+    "status": "sucesso",
+    "detalhes": "58 portais | 1 imagens baixadas"
+  }
+]

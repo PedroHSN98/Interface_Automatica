@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoHub Pro</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <span class="logo-icon">A</span>
+    <div>
+      <div class="logo-name">AutoHub Pro</div>
+      <div class="logo-sub">Central de Automações</div>
+    </div>
+  </div>
+
+  <div class="sidebar-divider"></div>
+  <div class="nav-section">PRINCIPAL</div>
+
+  <a class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+    <span class="nav-icon">📊</span>
+    <div class="nav-info"><span class="nav-label">Dashboard</span><span class="nav-desc">Visão geral</span></div>
+  </a>
+  <a class="nav-item" data-page="logs" onclick="navigate('logs')">
+    <span class="nav-icon">📋</span>
+    <div class="nav-info"><span class="nav-label">Analisador de Logs</span><span class="nav-desc">XML → Erros</span></div>
+  </a>
+  <a class="nav-item" data-page="scraper" onclick="navigate('scraper')">
+    <span class="nav-icon">🗂️</span>
+    <div class="nav-info"><span class="nav-label">Scraper de Imagens</span><span class="nav-desc">Extração Web</span></div>
+  </a>
+  <a class="nav-item" data-page="amaweb" onclick="navigate('amaweb')">
+    <span class="nav-icon">🕵️</span>
+    <div class="nav-info"><span class="nav-label">AMAWeb</span><span class="nav-desc">Acessibilidade</span></div>
+  </a>
+
+  <div class="nav-section" style="margin-top:6px">NOVAS FERRAMENTAS</div>
+
+  <a class="nav-item" data-page="uptime" onclick="navigate('uptime')">
+    <span class="nav-icon">📡</span>
+    <div class="nav-info"><span class="nav-label">Monitor de Uptime</span><span class="nav-desc">Ping contínuo</span></div>
+  </a>
+  <a class="nav-item" data-page="extrator" onclick="navigate('extrator')">
+    <span class="nav-icon">📑</span>
+    <div class="nav-info"><span class="nav-label">Extrator de Tabelas</span><span class="nav-desc">HTML → Excel</span></div>
+  </a>
+  <a class="nav-item" data-page="comparador" onclick="navigate('comparador')">
+    <span class="nav-icon">🔄</span>
+    <div class="nav-info"><span class="nav-label">Comparador</span><span class="nav-desc">Detecta mudanças</span></div>
+  </a>
+  <a class="nav-item" data-page="relatorio" onclick="navigate('relatorio')">
+    <span class="nav-icon">📄</span>
+    <div class="nav-info"><span class="nav-label">Relatório</span><span class="nav-desc">Consolidado</span></div>
+  </a>
+
+  <div class="nav-section" style="margin-top:6px">SISTEMA</div>
+  <a class="nav-item" data-page="historico" onclick="navigate('historico')">
+    <span class="nav-icon">📜</span>
+    <div class="nav-info"><span class="nav-label">Histórico</span><span class="nav-desc">Execuções passadas</span></div>
+  </a>
+
+  <div class="sidebar-version">v1.4 • 2025</div>
+</aside>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+    <span class="topbar-badge" id="topbar-badge">Visão geral</span>
+  </div>
+
+  <!-- Content (páginas de config) -->
+  <div class="content" id="content-area">
+
+    <!-- ── DASHBOARD ─────────────────────────────────────────────────── -->
+    <div class="page" id="page-dashboard">
+      <div class="dash-grid">
+        <div class="dash-card" id="dash-logs">
+          <div class="dash-card-title">📋 Logs</div>
+          <div class="dash-status">—</div>
+          <div class="dash-detail"></div>
+        </div>
+        <div class="dash-card" id="dash-scraper">
+          <div class="dash-card-title">🗂️ Scraper</div>
+          <div class="dash-status">—</div>
+          <div class="dash-detail"></div>
+        </div>
+        <div class="dash-card" id="dash-amaweb">
+          <div class="dash-card-title">🕵️ AMAWeb</div>
+          <div class="dash-status">—</div>
+          <div class="dash-detail"></div>
+        </div>
+        <div class="dash-card" style="display:flex;align-items:center;justify-content:center">
+          <button class="btn btn-sm" onclick="loadDashboard()" style="background:var(--bg3);color:var(--text2)">↻ Atualizar</button>
+        </div>
+      </div>
+      <div class="card" style="flex:1;min-height:180px">
+        <div class="card-header">HISTÓRICO RECENTE</div>
+        <div class="card-body">
+          <div id="dash-hist" style="font-family:Consolas,monospace;font-size:12px;max-height:280px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LOGS ──────────────────────────────────────────────────────── -->
+    <div class="page" id="page-logs">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">Data (dd/mm/aaaa)</span>
+            <input class="form-input" id="log-date-input" placeholder="dd/mm/aaaa" style="max-width:140px">
+            <button class="btn btn-primary btn-sm" onclick="addDate()">+ Adicionar</button>
+          </div>
+          <div class="form-row">
+            <span class="form-label"></span>
+            <div class="date-list" id="date-list">
+              <span class="t-dim" style="font-size:11px">Nenhuma data adicionada</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <span class="form-label"></span>
+            <span class="error-msg" id="log-date-error"></span>
+          </div>
+          <div class="form-row" style="margin-top:4px">
+            <span class="form-label">Elasticsearch</span>
+            <div class="checkbox-group">
+              {% for es in elasticsearchs %}
+              <label class="checkbox-item">
+                <input type="checkbox" class="chk-elastic" value="{{ es }}"
+                  {% if es in cfg.get('logs_servidores_elastic', elasticsearchs) %}checked{% endif %}>
+                {{ es }}
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-row">
+            <span class="form-label">Liferay</span>
+            <div class="checkbox-group">
+              {% for lr in liferays %}
+              <label class="checkbox-item">
+                <input type="checkbox" class="chk-liferay" value="{{ lr }}"
+                  {% if lr in cfg.get('logs_servidores_liferay', liferays) %}checked{% endif %}>
+                {{ lr }}
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runLogs()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCRAPER ────────────────────────────────────────────────────── -->
+    <div class="page" id="page-scraper">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">Links (links.txt)</span>
+            <input class="form-input" id="scraper-links" value="{{ cfg.get('scraper_links', 'fontes/links.txt') }}">
+          </div>
+          <div class="form-row">
+            <span class="form-label">Pasta de saída</span>
+            <input class="form-input" id="scraper-output" value="{{ cfg.get('scraper_output', 'galeria_noticias') }}">
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runScraper()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AMAWEB ─────────────────────────────────────────────────────── -->
+    <div class="page" id="page-amaweb">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">URLs (urls.txt)</span>
+            <input class="form-input" id="ama-urls" value="{{ cfg.get('ama_urls', 'urls.txt') }}">
+          </div>
+          <div class="form-row">
+            <span class="form-label">Resultado (.xlsx)</span>
+            <input class="form-input" id="ama-result" value="{{ cfg.get('ama_result', 'resultado.xlsx') }}">
+          </div>
+          <div class="form-row">
+            <span class="form-label">Alerta (nota mín.)</span>
+            <input class="form-input" id="ama-threshold" type="number" step="0.5" min="0" max="10"
+              value="{{ cfg.get('ama_threshold', 5.0) }}" style="max-width:80px">
+            <span style="font-size:11px;color:var(--text3)">&nbsp;(0 = desabilitado)</span>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runAmaweb()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UPTIME ─────────────────────────────────────────────────────── -->
+    <div class="page" id="page-uptime">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">URLs (uptime_urls.txt)</span>
+            <input class="form-input" id="uptime-urls" value="{{ cfg.get('uptime_urls', 'uptime_urls.txt') }}">
+          </div>
+          <div class="form-row">
+            <span class="form-label">Intervalo (seg)</span>
+            <input class="form-input" id="uptime-interval" type="number" min="5"
+              value="{{ cfg.get('uptime_interval', 60) }}" style="max-width:90px">
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runUptime()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EXTRATOR ───────────────────────────────────────────────────── -->
+    <div class="page" id="page-extrator">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">URL da página</span>
+            <input class="form-input" id="extrator-url" placeholder="https://..." value="{{ cfg.get('extrator_url', '') }}">
+          </div>
+          <div class="form-row">
+            <span class="form-label">Salvar em (.xlsx)</span>
+            <input class="form-input" id="extrator-output" value="{{ cfg.get('extrator_output', 'tabelas.xlsx') }}">
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runExtrator()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMPARADOR ─────────────────────────────────────────────────── -->
+    <div class="page" id="page-comparador">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">URLs (comparador_urls.txt)</span>
+            <input class="form-input" id="comp-urls" value="{{ cfg.get('comparador_urls', 'comparador_urls.txt') }}">
+          </div>
+          <div class="form-row">
+            <span class="form-label">Pasta de snapshots</span>
+            <input class="form-input" id="comp-output" value="{{ cfg.get('comparador_output', 'comparacoes') }}">
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runComparador()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RELATÓRIO ──────────────────────────────────────────────────── -->
+    <div class="page" id="page-relatorio">
+      <div class="card">
+        <div class="card-header">CONFIGURAÇÕES</div>
+        <div class="card-body">
+          <div class="form-row">
+            <span class="form-label">Salvar em (.xlsx)</span>
+            <input class="form-input" id="rel-output" value="relatorio_consolidado.xlsx">
+          </div>
+          <div class="form-row">
+            <span class="form-label"></span>
+            <span style="font-size:11px;color:var(--text3)">Consolida: histórico + Scraper + AMAWeb em uma planilha</span>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-run" onclick="runRelatorio()">▶ Executar</button>
+            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
+            <div class="spinner"></div>
+            <span class="error-msg" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HISTÓRICO ──────────────────────────────────────────────────── -->
+    <div class="page" id="page-historico">
+      <div class="card" style="flex:1">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+          <span>HISTÓRICO DE EXECUÇÕES</span>
+          <button class="btn btn-sm" style="background:var(--bg3);color:var(--text2)" onclick="loadHistorico()">↻ Atualizar</button>
+        </div>
+        <div class="card-body" style="overflow-x:auto">
+          <table class="hist-table">
+            <thead>
+              <tr><th>DATA</th><th>MÓDULO</th><th>STATUS</th><th>DETALHES</th></tr>
+            </thead>
+            <tbody id="hist-tbody">
+              <tr><td colspan="4" style="color:var(--text3);text-align:center;padding:20px">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- ═══ TERMINAL COMPARTILHADO (fora das páginas) ══════════════════════ -->
+  <div id="shared-terminal" style="display:none;flex-direction:column;padding:0 14px 0;flex-shrink:0;height:280px">
+    <div class="terminal-card" style="height:100%">
+      <div class="terminal-header">
+        <span>▌ TERMINAL DE SAÍDA</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="progress-wrap" style="width:200px;margin:0">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <button class="btn btn-sm" style="background:var(--bg4);color:var(--text2)" onclick="termClear()">Limpar</button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminal"></div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="statusbar">
+    <span class="status-dot ok" id="status-dot">●</span>
+    <span class="statusbar-text" id="status-text">Pronto</span>
+    <span class="statusbar-clock" id="clock"></span>
+  </div>
+
+</div><!-- /main -->
+
+<script src="/static/app.js"></script>
+</body>
+</html>
