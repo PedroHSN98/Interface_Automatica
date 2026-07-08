@@ -43,26 +43,8 @@ Acessa o portal `amaweb.unifesp.br` para cada URL da lista, extrai a nota de ace
 - **Saída:** planilha `.xlsx` com nota por site + `historico_amaweb.json`
 - Timeout de 180 s por site
 
-### 📡 Monitor de Uptime
-Faz ping HTTP contínuo em uma lista de sites, em intervalo configurável, sinalizando quando um site sai do ar ou volta a responder.
-
-- **Entrada:** arquivo de URLs + intervalo em segundos
-- **Saída:** log contínuo no terminal da interface
-
-### 📑 Extrator de Tabelas
-Recebe uma URL, extrai todas as tabelas HTML da página e exporta para uma planilha Excel formatada.
-
-- **Entrada:** URL da página
-- **Saída:** planilha `.xlsx` com as tabelas extraídas
-
-### 🔄 Comparador
-Tira um "retrato" (snapshot com hash) do conteúdo de uma lista de páginas e, a cada nova execução, aponta o que mudou desde a última vez.
-
-- **Entrada:** arquivo com URLs a monitorar
-- **Saída:** relatório de mudanças + `snapshots.json` para comparações futuras
-
 ### 📄 Relatório Consolidado
-Junta os dados de todos os módulos (logs, scraper, AMAWeb, uptime etc.) em uma única planilha Excel formatada, pronta para envio/arquivamento.
+Junta os dados de todos os módulos (logs, scraper, AMAWeb etc.) em uma única planilha Excel formatada, pronta para envio/arquivamento.
 
 - **Saída:** `relatorio_consolidado.xlsx`
 
@@ -188,8 +170,8 @@ Todas listadas em `requirements.txt`:
 
 | Pacote | Para que serve |
 |---|---|
-| `requests` | Requisições HTTP (scraper, amaweb, uptime, extrator, comparador) |
-| `beautifulsoup4` | Parse de HTML (scraper, extrator, comparador) |
+| `requests` | Requisições HTTP (scraper, amaweb) |
+| `beautifulsoup4` | Parse de HTML (scraper) |
 | `pandas` / `openpyxl` | Geração e leitura de planilhas Excel |
 | `tqdm` | Barras de progresso em terminal |
 | `selenium` | Automação do Chrome (AMAWeb) |
@@ -225,9 +207,6 @@ interface_automacao/
 │   ├── logs.py
 │   ├── scraper.py
 │   ├── amaweb.py
-│   ├── uptime.py
-│   ├── extrator.py
-│   ├── comparador.py
 │   └── relatorio.py
 ├── config/
 │   ├── settings.py             # load/save do config.json

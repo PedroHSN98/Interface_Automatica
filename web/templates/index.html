@@ -40,18 +40,6 @@
 
   <div class="nav-section" style="margin-top:6px">NOVAS FERRAMENTAS</div>
 
-  <a class="nav-item" data-page="uptime" onclick="navigate('uptime')">
-    <span class="nav-icon">📡</span>
-    <div class="nav-info"><span class="nav-label">Monitor de Uptime</span><span class="nav-desc">Ping contínuo</span></div>
-  </a>
-  <a class="nav-item" data-page="extrator" onclick="navigate('extrator')">
-    <span class="nav-icon">📑</span>
-    <div class="nav-info"><span class="nav-label">Extrator de Tabelas</span><span class="nav-desc">HTML → Excel</span></div>
-  </a>
-  <a class="nav-item" data-page="comparador" onclick="navigate('comparador')">
-    <span class="nav-icon">🔄</span>
-    <div class="nav-info"><span class="nav-label">Comparador</span><span class="nav-desc">Detecta mudanças</span></div>
-  </a>
   <a class="nav-item" data-page="relatorio" onclick="navigate('relatorio')">
     <span class="nav-icon">📄</span>
     <div class="nav-info"><span class="nav-label">Relatório</span><span class="nav-desc">Consolidado</span></div>
@@ -206,76 +194,6 @@
           </div>
           <div class="action-row">
             <button class="btn btn-primary btn-run" onclick="runAmaweb()">▶ Executar</button>
-            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
-            <div class="spinner"></div>
-            <span class="error-msg" style="margin-left:8px"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── UPTIME ─────────────────────────────────────────────────────── -->
-    <div class="page" id="page-uptime">
-      <div class="card">
-        <div class="card-header">CONFIGURAÇÕES</div>
-        <div class="card-body">
-          <div class="form-row">
-            <span class="form-label">URLs (uptime_urls.txt)</span>
-            <input class="form-input" id="uptime-urls" value="{{ cfg.get('uptime_urls', 'uptime_urls.txt') }}">
-          </div>
-          <div class="form-row">
-            <span class="form-label">Intervalo (seg)</span>
-            <input class="form-input" id="uptime-interval" type="number" min="5"
-              value="{{ cfg.get('uptime_interval', 60) }}" style="max-width:90px">
-          </div>
-          <div class="action-row">
-            <button class="btn btn-primary btn-run" onclick="runUptime()">▶ Executar</button>
-            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
-            <div class="spinner"></div>
-            <span class="error-msg" style="margin-left:8px"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── EXTRATOR ───────────────────────────────────────────────────── -->
-    <div class="page" id="page-extrator">
-      <div class="card">
-        <div class="card-header">CONFIGURAÇÕES</div>
-        <div class="card-body">
-          <div class="form-row">
-            <span class="form-label">URL da página</span>
-            <input class="form-input" id="extrator-url" placeholder="https://..." value="{{ cfg.get('extrator_url', '') }}">
-          </div>
-          <div class="form-row">
-            <span class="form-label">Salvar em (.xlsx)</span>
-            <input class="form-input" id="extrator-output" value="{{ cfg.get('extrator_output', 'tabelas.xlsx') }}">
-          </div>
-          <div class="action-row">
-            <button class="btn btn-primary btn-run" onclick="runExtrator()">▶ Executar</button>
-            <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
-            <div class="spinner"></div>
-            <span class="error-msg" style="margin-left:8px"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── COMPARADOR ─────────────────────────────────────────────────── -->
-    <div class="page" id="page-comparador">
-      <div class="card">
-        <div class="card-header">CONFIGURAÇÕES</div>
-        <div class="card-body">
-          <div class="form-row">
-            <span class="form-label">URLs (comparador_urls.txt)</span>
-            <input class="form-input" id="comp-urls" value="{{ cfg.get('comparador_urls', 'comparador_urls.txt') }}">
-          </div>
-          <div class="form-row">
-            <span class="form-label">Pasta de snapshots</span>
-            <input class="form-input" id="comp-output" value="{{ cfg.get('comparador_output', 'comparacoes') }}">
-          </div>
-          <div class="action-row">
-            <button class="btn btn-primary btn-run" onclick="runComparador()">▶ Executar</button>
             <button class="btn btn-danger btn-stop" onclick="stopModule()" disabled>■ Parar</button>
             <div class="spinner"></div>
             <span class="error-msg" style="margin-left:8px"></span>

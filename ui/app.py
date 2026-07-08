@@ -16,9 +16,6 @@ from utils.notificacao import notificar
 from automations.logs import run_logs, ELASTICSEARCHS, LIFERAYS
 from automations.scraper import run_scraper
 from automations.amaweb import run_amaweb
-from automations.uptime import run_uptime
-from automations.comparador import run_comparador
-from automations.extrator import run_extrator
 from automations.relatorio import run_relatorio
 
 logging.basicConfig(
@@ -39,9 +36,6 @@ class AutoHubApp:
             ("amaweb",    "🕵️", "AMAWeb",               "Acessibilidade"),
         ]),
         ("NOVAS FERRAMENTAS", [
-            ("uptime",     "📡", "Monitor de Uptime",   "Ping continuo"),
-            ("extrator",   "📑", "Extrator de Tabelas", "HTML -> Excel"),
-            ("comparador", "🔄", "Comparador",          "Detecta mudancas"),
             ("relatorio",  "📄", "Relatorio",           "Consolidado"),
         ]),
         ("SISTEMA", [
@@ -54,9 +48,6 @@ class AutoHubApp:
         "logs":       ("📋  Analisador de Logs",    "XML -> Relatorio de Erros"),
         "scraper":    ("🗂️  Scraper de Imagens",    "Extracao de Imagens Web"),
         "amaweb":     ("🕵️  AMAWeb",               "Avaliador de Acessibilidade"),
-        "uptime":     ("📡  Monitor de Uptime",     "Monitoramento continuo"),
-        "extrator":   ("📑  Extrator de Tabelas",   "HTML -> Excel"),
-        "comparador": ("🔄  Comparador",            "Detecta mudancas em paginas"),
         "relatorio":  ("📄  Relatorio Consolidado", "Exporta todos os dados"),
         "historico":  ("📜  Historico",             "Execucoes anteriores"),
     }
@@ -102,12 +93,6 @@ class AutoHubApp:
         self.ama_result       = tk.StringVar(value=cfg.get("ama_result", "resultado.xlsx"))
         self.ama_threshold    = tk.DoubleVar(value=cfg.get("ama_threshold", 5.0))
         self.notif_var        = tk.BooleanVar(value=cfg.get("notificacoes", True))
-        self.uptime_urls      = tk.StringVar(value=cfg.get("uptime_urls",     "uptime_urls.txt"))
-        self.uptime_interval  = tk.StringVar(value=str(cfg.get("uptime_interval", 60)))
-        self.extrator_url     = tk.StringVar(value=cfg.get("extrator_url",    ""))
-        self.extrator_output  = tk.StringVar(value=cfg.get("extrator_output", "tabelas.xlsx"))
-        self.comp_urls        = tk.StringVar(value=cfg.get("comparador_urls",    "comparador_urls.txt"))
-        self.comp_output      = tk.StringVar(value=cfg.get("comparador_output",  "comparacoes"))
         self.relatorio_output = tk.StringVar(value="relatorio_consolidado.xlsx")
 
         self._elastic_vars = {
@@ -257,9 +242,6 @@ class AutoHubApp:
             "logs":       self._page_logs(pc),
             "scraper":    self._page_scraper(pc),
             "amaweb":     self._page_amaweb(pc),
-            "uptime":     self._page_uptime(pc),
-            "extrator":   self._page_extrator(pc),
-            "comparador": self._page_comparador(pc),
             "relatorio":  self._page_relatorio(pc),
             "historico":  self._page_historico(pc),
         }
@@ -708,53 +690,6 @@ class AutoHubApp:
         self._terminal_card(pg, "amaweb")
         return pg
 
-    # ── Uptime ───────────────────────────────────────────────────────── #
-    def _page_uptime(self, parent):
-        pg = self._make_page(parent)
-        card = self._config_card(pg)
-        self._file_row(card, 1, "URLs (uptime_urls.txt)", self.uptime_urls, "file")
-
-        tk.Label(card, text="Intervalo (seg)", font=FONT_MAIN, bg=C["bg2"],
-                 fg=C["text2"], width=18, anchor="e").grid(
-                     row=2, column=0, sticky="e", padx=(0, 10), pady=4)
-        tk.Entry(card, textvariable=self.uptime_interval, font=FONT_MONO,
-                 bg=C["bg4"], fg=C["text"], insertbackground=C["text"],
-                 relief="flat", bd=0, width=8).grid(row=2, column=1, sticky="w", ipady=6)
-
-        self._action_row(card, 3, self._exec_uptime, "uptime")
-        self._progress_row(card, 4, "uptime")
-        self._terminal_card(pg, "uptime")
-        return pg
-
-    # ── Extrator ─────────────────────────────────────────────────────── #
-    def _page_extrator(self, parent):
-        pg = self._make_page(parent)
-        card = self._config_card(pg)
-
-        tk.Label(card, text="URL da pagina", font=FONT_MAIN, bg=C["bg2"],
-                 fg=C["text2"], width=18, anchor="e").grid(
-                     row=1, column=0, sticky="e", padx=(0, 10), pady=4)
-        tk.Entry(card, textvariable=self.extrator_url, font=FONT_MONO,
-                 bg=C["bg4"], fg=C["text"], insertbackground=C["text"],
-                 relief="flat", bd=0).grid(row=1, column=1, sticky="ew", ipady=6, padx=(0, 8))
-
-        self._file_row(card, 2, "Salvar em (.xlsx)", self.extrator_output, "save")
-        self._action_row(card, 3, self._exec_extrator, "extrator")
-        self._progress_row(card, 4, "extrator")
-        self._terminal_card(pg, "extrator")
-        return pg
-
-    # ── Comparador ───────────────────────────────────────────────────── #
-    def _page_comparador(self, parent):
-        pg = self._make_page(parent)
-        card = self._config_card(pg)
-        self._file_row(card, 1, "URLs (comparador_urls.txt)", self.comp_urls, "file")
-        self._file_row(card, 2, "Pasta de snapshots",        self.comp_output, "dir")
-        self._action_row(card, 3, self._exec_comparador, "comparador")
-        self._progress_row(card, 4, "comparador")
-        self._terminal_card(pg, "comparador")
-        return pg
-
     # ── Relatorio ────────────────────────────────────────────────────── #
     def _page_relatorio(self, parent):
         pg = self._make_page(parent)
@@ -934,33 +869,6 @@ class AutoHubApp:
                                   threshold=self.ama_threshold.get()),
             "amaweb", self.ama_urls.get(), self.ama_result.get(),
         )
-
-    def _exec_uptime(self):
-        if not os.path.exists(self.uptime_urls.get()):
-            self._append(self._terms.get("uptime"),
-                         f"  [ERRO] Arquivo nao encontrado: {self.uptime_urls.get()}\n", "error")
-            return
-        try:
-            intervalo = int(self.uptime_interval.get())
-        except ValueError:
-            intervalo = 60
-        self._start(run_uptime, "uptime", self.uptime_urls.get(), intervalo)
-
-    def _exec_extrator(self):
-        if not self.extrator_url.get().strip():
-            self._append(self._terms.get("extrator"),
-                         "  [ERRO] Informe a URL da pagina.\n", "error")
-            return
-        self._start(run_extrator, "extrator",
-                    self.extrator_url.get(), self.extrator_output.get())
-
-    def _exec_comparador(self):
-        if not os.path.exists(self.comp_urls.get()):
-            self._append(self._terms.get("comparador"),
-                         f"  [ERRO] Arquivo nao encontrado: {self.comp_urls.get()}\n", "error")
-            return
-        self._start(run_comparador, "comparador",
-                    self.comp_urls.get(), self.comp_output.get())
 
     def _exec_relatorio(self):
         self._start(run_relatorio, "relatorio", self.relatorio_output.get())
@@ -1217,12 +1125,6 @@ class AutoHubApp:
                 "ama_result":       self.ama_result.get(),
                 "ama_threshold":    self.ama_threshold.get(),
                 "notificacoes":     self.notif_var.get(),
-                "uptime_urls":      self.uptime_urls.get(),
-                "uptime_interval":  int(self.uptime_interval.get() or 60),
-                "extrator_url":     self.extrator_url.get(),
-                "extrator_output":  self.extrator_output.get(),
-                "comparador_urls":  self.comp_urls.get(),
-                "comparador_output":self.comp_output.get(),
                 "logs_servidores_elastic": [n for n, v in self._elastic_vars.items() if v.get()],
                 "logs_servidores_liferay": [n for n, v in self._liferay_vars.items() if v.get()],
             })

@@ -8,12 +8,6 @@
   "ama_result": "resultado.xlsx",
   "ama_threshold": 8.0,
   "notificacoes": true,
-  "uptime_urls": "C:/Users/8761221/Pictures/interface_automacao/galeria_noticias/registro_noticias.xlsx",
-  "uptime_interval": 60,
-  "extrator_url": "https://pt.wikipedia.org/wiki/Lista_de_países_por_população",
-  "extrator_output": "C:/Users/8761221/Pictures/interface_automacao/galeria_noticias/extrato_de_tabelas.xlsx",
-  "comparador_urls": "comparador_urls.txt",
-  "comparador_output": "comparacoes",
   "logs_servidores_elastic": [
     "Elasticsearch 1",
     "Elasticsearch 2",

@@ -4,7 +4,7 @@ let sse = null;
 let logsDatas = [];
 
 // Páginas que exibem o terminal compartilhado
-const TERMINAL_PAGES = new Set(["logs","scraper","amaweb","uptime","extrator","comparador","relatorio"]);
+const TERMINAL_PAGES = new Set(["logs","scraper","amaweb","relatorio"]);
 
 /* ── Navegação ───────────────────────────────────────────────────────────── */
 function navigate(page) {
@@ -24,9 +24,6 @@ function navigate(page) {
     logs:       ["📋  Analisador de Logs",     "XML → Erros via SSH"],
     scraper:    ["🗂️  Scraper de Imagens",     "Extração Web"],
     amaweb:     ["🕵️  AMAWeb",                "Acessibilidade"],
-    uptime:     ["📡  Monitor de Uptime",      "Ping contínuo"],
-    extrator:   ["📑  Extrator de Tabelas",    "HTML → Excel"],
-    comparador: ["🔄  Comparador",             "Detecta mudanças"],
     relatorio:  ["📄  Relatório Consolidado",  "Exporta todos os dados"],
     historico:  ["📜  Histórico",              "Execuções anteriores"],
   };
@@ -202,27 +199,6 @@ function runAmaweb() {
     urls:      document.getElementById("ama-urls").value,
     result:    document.getElementById("ama-result").value,
     threshold: parseFloat(document.getElementById("ama-threshold").value) || 5.0,
-  });
-}
-
-function runUptime() {
-  startModule("uptime", {
-    urls:     document.getElementById("uptime-urls").value,
-    interval: parseInt(document.getElementById("uptime-interval").value) || 60,
-  });
-}
-
-function runExtrator() {
-  startModule("extrator", {
-    url:    document.getElementById("extrator-url").value,
-    output: document.getElementById("extrator-output").value,
-  });
-}
-
-function runComparador() {
-  startModule("comparador", {
-    urls:   document.getElementById("comp-urls").value,
-    output: document.getElementById("comp-output").value,
   });
 }
 

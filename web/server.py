@@ -15,9 +15,6 @@ from datetime import datetime
 from automations.logs import run_logs, ELASTICSEARCHS, LIFERAYS
 from automations.scraper import run_scraper
 from automations.amaweb import run_amaweb
-from automations.uptime import run_uptime
-from automations.extrator import run_extrator
-from automations.comparador import run_comparador
 from automations.relatorio import run_relatorio
 from config import settings
 from utils import historico as hist
@@ -138,23 +135,6 @@ def run_module(module):
         result = data.get("result") or cfg.get("ama_result", "resultado.xlsx")
         threshold = float(data.get("threshold", cfg.get("ama_threshold", 5.0)))
         target = lambda q, ev: run_amaweb(urls, result, q, ev, threshold=threshold)
-
-    elif module == "uptime":
-        urls = data.get("urls") or cfg.get("uptime_urls", "uptime_urls.txt")
-        interval = int(data.get("interval", cfg.get("uptime_interval", 60)))
-        target = lambda q, ev: run_uptime(urls, interval, q, ev)
-
-    elif module == "extrator":
-        url = data.get("url") or cfg.get("extrator_url", "")
-        output = data.get("output") or cfg.get("extrator_output", "tabelas.xlsx")
-        if not url.strip():
-            return jsonify({"ok": False, "error": "Informe a URL da página."})
-        target = lambda q, ev: run_extrator(url, output, q, ev)
-
-    elif module == "comparador":
-        urls = data.get("urls") or cfg.get("comparador_urls", "comparador_urls.txt")
-        output = data.get("output") or cfg.get("comparador_output", "comparacoes")
-        target = lambda q, ev: run_comparador(urls, output, q, ev)
 
     elif module == "relatorio":
         output = data.get("output") or "relatorio_consolidado.xlsx"

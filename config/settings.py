@@ -13,12 +13,6 @@ DEFAULTS = {
     "ama_result": "resultado.xlsx",
     "ama_threshold": 5.0,
     "notificacoes": True,
-    "uptime_urls": "uptime_urls.txt",
-    "uptime_interval": 60,
-    "extrator_url": "",
-    "extrator_output": "tabelas.xlsx",
-    "comparador_urls": "comparador_urls.txt",
-    "comparador_output": "comparacoes",
     "logs_servidores_elastic": ["Elasticsearch 1", "Elasticsearch 2", "Elasticsearch 3"],
     "logs_servidores_liferay": ["Liferay 1", "Liferay 2"],
 }
