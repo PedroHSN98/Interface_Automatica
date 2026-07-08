@@ -55,7 +55,7 @@ Tela com o histórico das últimas execuções de todos os módulos (status, dat
 
 ## Documentação em PDF
 
-Além deste README, o projeto inclui **dois manuais em PDF prontos**, gerados automaticamente e versionados no repositório — úteis para quem for instalar ou usar o AutoHub Pro sem precisar ler o código:
+Além deste README, o projeto inclui scripts para gerar **dois manuais em PDF**, úteis para quem for instalar ou usar o AutoHub Pro sem precisar ler o código. Os PDFs não ficam versionados no repositório (são gerados localmente) — gere-os quando precisar:
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -89,8 +89,8 @@ Necessário apenas para o módulo **AMAWeb**. Instale em [google.com/chrome](htt
 ### 3. ChromeDriver
 Deve corresponder à versão do Chrome instalado. O projeto usa `selenium>=4.18`, que já resolve o driver automaticamente na maioria dos casos. Se não funcionar, baixe manualmente em [chromedriver.chromium.org](https://chromedriver.chromium.org/downloads) e coloque o executável em uma pasta do PATH (ex: `C:\Windows\System32`).
 
-### 4. Credenciais SSH (apenas para o Analisador de Logs)
-O módulo de logs precisa de usuário/senha para conectar via SSH aos servidores Elasticsearch/Liferay. Essas credenciais **nunca** vão para o Git — ficam em um arquivo `.env` local (veja Passo 6 abaixo).
+### 4. Credenciais e IPs dos servidores (apenas para o Analisador de Logs)
+O módulo de logs precisa de usuário/senha e dos IPs dos servidores Elasticsearch/Liferay para conectar via SSH. Essas informações **nunca** vão para o Git — ficam em um arquivo `.env` local (veja Passo 6 abaixo).
 
 ---
 
@@ -127,6 +127,12 @@ Edite `.env`:
 ```
 LIFERAY_USUARIO=seu_usuario_aqui
 LIFERAY_SENHA=sua_senha_aqui
+
+ELASTIC_1_IP=192.168.x.x
+ELASTIC_2_IP=192.168.x.x
+ELASTIC_3_IP=192.168.x.x
+LIFERAY_1_IP=192.168.x.x
+LIFERAY_2_IP=192.168.x.x
 ```
 
 ### Passo 6 — Executar
@@ -181,10 +187,21 @@ Todas listadas em `requirements.txt`:
 | `plyer` | Notificações nativas do Windows |
 | `flask` | Interface web |
 | `tkinter` | Interface desktop (já incluso no Python) |
+| `pytest` | Testes automatizados (dev) |
 
 Instale tudo de uma vez:
 ```powershell
 pip install -r requirements.txt
+```
+
+---
+
+## Testes
+
+O projeto tem testes automatizados (pytest) para o parsing de logs e o histórico de execuções, em `tests/`. Rode com:
+
+```powershell
+pytest
 ```
 
 ---
@@ -199,15 +216,18 @@ interface_automacao/
 ├── gerar_documentacao.py      # gera AutoHub_Pro_Documentacao.pdf
 ├── run_web.bat                # inicia a interface web
 ├── requirements.txt
+├── pytest.ini                   # config dos testes
 ├── .env.example                # modelo de credenciais (copiar para .env)
 ├── config.json                 # preferências salvas pela interface
-├── historico.json              # histórico de execuções
-├── historico_amaweb.json       # histórico de notas do AMAWeb
+├── historico.json              # histórico de execuções (gerado, não versionado)
+├── historico_amaweb.json       # histórico de notas do AMAWeb (gerado, não versionado)
 ├── automations/                # lógica de cada módulo
 │   ├── logs.py
 │   ├── scraper.py
 │   ├── amaweb.py
 │   └── relatorio.py
+├── core/
+│   └── services.py             # camada compartilhada: monta o callable de cada automação (usada por ui/ e web/)
 ├── config/
 │   ├── settings.py             # load/save do config.json
 │   └── theme.py                # tema claro/escuro da UI desktop
@@ -220,6 +240,7 @@ interface_automacao/
 ├── utils/
 │   ├── historico.py             # registra/lista execuções
 │   └── notificacao.py           # notificações do Windows
+├── tests/                       # testes automatizados (pytest)
 ├── assets/                      # ícone gerado (criar_atalho.py)
 ├── result-txt/                  # arquivos de entrada/saída de exemplo
 └── galeria_noticias/             # saída padrão do Scraper
@@ -236,7 +257,7 @@ interface_automacao/
 > O Google Chrome não está instalado, ou o driver está desatualizado. Instale/atualize o Chrome e reinstale o selenium: `pip install --upgrade selenium`.
 
 **Falha de conexão SSH** (módulo Analisador de Logs)
-> Verifique se `.env` existe e contém `LIFERAY_USUARIO`/`LIFERAY_SENHA` válidos, e se a máquina tem acesso de rede aos servidores internos.
+> Verifique se `.env` existe e contém `LIFERAY_USUARIO`/`LIFERAY_SENHA` e os IPs (`ELASTIC_*_IP`/`LIFERAY_*_IP`) válidos, e se a máquina tem acesso de rede aos servidores internos.
 
 **Tkinter não encontrado**
 > Reinstale o Python marcando a opção **"tcl/tk and IDLE"** durante a instalação.

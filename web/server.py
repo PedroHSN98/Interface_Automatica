@@ -12,11 +12,9 @@ sys.path.insert(0, ROOT)
 from flask import Flask, Response, render_template, request, jsonify
 from datetime import datetime
 
-from automations.logs import run_logs, ELASTICSEARCHS, LIFERAYS
-from automations.scraper import run_scraper
-from automations.amaweb import run_amaweb
-from automations.relatorio import run_relatorio
+from automations.logs import ELASTICSEARCHS, LIFERAYS
 from config import settings
+from core import services
 from utils import historico as hist
 
 app = Flask(__name__)
@@ -119,26 +117,22 @@ def run_module(module):
             return jsonify({"ok": False, "error": "Data inválida. Use dd/mm/aaaa."})
         elastic_sel = data.get("elastic") or list(ELASTICSEARCHS.keys())
         liferay_sel = data.get("liferay") or list(LIFERAYS.keys())
-        target = lambda q, ev: run_logs(
-            datas, q, ev,
-            servidores_elastic=elastic_sel,
-            servidores_liferay=liferay_sel,
-        )
+        target = services.build_logs(datas, elastic_sel, liferay_sel)
 
     elif module == "scraper":
         links = data.get("links") or cfg.get("scraper_links", "fontes/links.txt")
         output = data.get("output") or cfg.get("scraper_output", "galeria_noticias")
-        target = lambda q, ev: run_scraper(links, output, q, ev)
+        target = services.build_scraper(links, output)
 
     elif module == "amaweb":
         urls = data.get("urls") or cfg.get("ama_urls", "urls.txt")
         result = data.get("result") or cfg.get("ama_result", "resultado.xlsx")
         threshold = float(data.get("threshold", cfg.get("ama_threshold", 5.0)))
-        target = lambda q, ev: run_amaweb(urls, result, q, ev, threshold=threshold)
+        target = services.build_amaweb(urls, result, threshold)
 
     elif module == "relatorio":
         output = data.get("output") or "relatorio_consolidado.xlsx"
-        target = lambda q, ev: run_relatorio(output, q, ev)
+        target = services.build_relatorio(output)
 
     else:
         return jsonify({"ok": False, "error": f"Módulo desconhecido: {module}"})

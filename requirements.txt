@@ -25,3 +25,6 @@ plyer>=2.1.0
 
 # --- Interface Web ---
 flask>=3.0.0
+
+# --- Testes (dev) ---
+pytest>=8.0.0

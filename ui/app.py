@@ -11,12 +11,10 @@ from datetime import datetime
 import config.theme as theme
 from config.theme import C, FONT_MAIN, FONT_MONO, FONT_SMALL, FONT_H2
 from config import settings
+from core import services
 from utils import historico as hist
 from utils.notificacao import notificar
-from automations.logs import run_logs, ELASTICSEARCHS, LIFERAYS
-from automations.scraper import run_scraper
-from automations.amaweb import run_amaweb
-from automations.relatorio import run_relatorio
+from automations.logs import ELASTICSEARCHS, LIFERAYS
 
 logging.basicConfig(
     filename="app.log",
@@ -809,7 +807,7 @@ class AutoHubApp:
     # ------------------------------------------------------------------ #
     #  EXECUTORS                                                           #
     # ------------------------------------------------------------------ #
-    def _start(self, target, module_key, *args):
+    def _start(self, target, module_key):
         if self.running:
             return
         self.running = True
@@ -823,7 +821,7 @@ class AutoHubApp:
             self._progress_vars[module_key].set(0.0)
         self._set_status(f"Executando {module_key}...", C["yellow"])
         threading.Thread(target=target,
-                         args=(*args, self.out_q, self.stop_ev),
+                         args=(self.out_q, self.stop_ev),
                          daemon=True).start()
 
     def _exec_logs(self):
@@ -840,12 +838,8 @@ class AutoHubApp:
         self._logs_dl_xlsx.configure(state="disabled", fg=C["text3"])
         elastic_sel = [n for n, v in self._elastic_vars.items() if v.get()]
         liferay_sel = [n for n, v in self._liferay_vars.items() if v.get()]
-        self._start(
-            lambda *a: run_logs(a[0], a[1], a[2],
-                                servidores_elastic=elastic_sel,
-                                servidores_liferay=liferay_sel),
-            "logs", list(self.logs_datas),
-        )
+        target = services.build_logs(list(self.logs_datas), elastic_sel, liferay_sel)
+        self._start(target, "logs")
 
     def _exec_scraper(self):
         if not os.path.exists(self.scraper_links.get()):
@@ -854,8 +848,8 @@ class AutoHubApp:
             return
         self._scraper_folder = None
         self._scraper_preview_btn.configure(state="disabled", fg=C["text3"])
-        self._start(run_scraper, "scraper",
-                    self.scraper_links.get(), self.scraper_output.get())
+        target = services.build_scraper(self.scraper_links.get(), self.scraper_output.get())
+        self._start(target, "scraper")
 
     def _exec_amaweb(self):
         if not os.path.exists(self.ama_urls.get()):
@@ -864,14 +858,13 @@ class AutoHubApp:
             return
         self._ama_result_data = None
         self._ama_dl_txt.configure(state="disabled", fg=C["text3"])
-        self._start(
-            lambda *a: run_amaweb(a[0], a[1], a[2], a[3],
-                                  threshold=self.ama_threshold.get()),
-            "amaweb", self.ama_urls.get(), self.ama_result.get(),
-        )
+        target = services.build_amaweb(self.ama_urls.get(), self.ama_result.get(),
+                                       self.ama_threshold.get())
+        self._start(target, "amaweb")
 
     def _exec_relatorio(self):
-        self._start(run_relatorio, "relatorio", self.relatorio_output.get())
+        target = services.build_relatorio(self.relatorio_output.get())
+        self._start(target, "relatorio")
 
     def _stop(self):
         if self.running:

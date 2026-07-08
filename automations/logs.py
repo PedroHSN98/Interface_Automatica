@@ -9,14 +9,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ELASTICSEARCHS = {
-    "Elasticsearch 1": "192.168.200.124",
-    "Elasticsearch 2": "192.168.200.161",
-    "Elasticsearch 3": "192.168.200.162",
+    "Elasticsearch 1": os.getenv("ELASTIC_1_IP", ""),
+    "Elasticsearch 2": os.getenv("ELASTIC_2_IP", ""),
+    "Elasticsearch 3": os.getenv("ELASTIC_3_IP", ""),
 }
 
 LIFERAYS = {
-    "Liferay 1": "192.168.200.140",
-    "Liferay 2": "192.168.200.147",
+    "Liferay 1": os.getenv("LIFERAY_1_IP", ""),
+    "Liferay 2": os.getenv("LIFERAY_2_IP", ""),
 }
 
 USUARIO = os.getenv("LIFERAY_USUARIO")
