@@ -1,34 +1,80 @@
 AutoHub Pro - Relatorio de Logs SSH
-Gerado em: 02/07/2026 09:27:26
+Gerado em: 06/07/2026 06:58:32
 ================================================================================
 
-Data: 01/07/2026
+Data: 03/07/2026
 ----------------------------------------
   01. ElasticSearchException = 0
   02. Notfound = 0
-  03. Broken Pipe = 1
+  03. Broken Pipe = 4
   04. Connection Reset By Peer = 0
   05. LDAPUserImporterImpl = 16
-  06. Problem accessing LDAP server = 3
+  06. Problem accessing LDAP server = 4
   07. LDAPAuth = 0
   08. Skip /frontend-js-metal-web$metal = 0
   09. No theme found for mtportal_WAR = 0
-  10. Error {code="404"} = 9547
+  10. Error {code="404"} = 8994
   11. SAX Security Manager = 0
   12. Ajax-Loader = 0
-  13. CTCollectionPreviewFilter = 220
+  13. CTCollectionPreviewFilter = 803
   14. FTL stack trace = 0
   15. NoSuchFileEntryException = 0
   16. InvalidRepositoryIdException = 1
-  17. PaginationLimitFilter bot UA = 35964
+  17. PaginationLimitFilter bot UA = 46238
 
-  LOG Liferay 1: 19.5 MB
-  LOG Liferay 2: 18.4 MB
+  LOG Liferay 1: 24.0 MB
+  LOG Liferay 2: 32.1 MB
+
+Data: 04/07/2026
+----------------------------------------
+  01. ElasticSearchException = 52
+  02. Notfound = 0
+  03. Broken Pipe = 0
+  04. Connection Reset By Peer = 0
+  05. LDAPUserImporterImpl = 16
+  06. Problem accessing LDAP server = 2
+  07. LDAPAuth = 0
+  08. Skip /frontend-js-metal-web$metal = 0
+  09. No theme found for mtportal_WAR = 4
+  10. Error {code="404"} = 10427
+  11. SAX Security Manager = 0
+  12. Ajax-Loader = 0
+  13. CTCollectionPreviewFilter = 3233
+  14. FTL stack trace = 0
+  15. NoSuchFileEntryException = 0
+  16. InvalidRepositoryIdException = 0
+  17. PaginationLimitFilter bot UA = 48846
+
+  LOG Liferay 1: 24.5 MB
+  LOG Liferay 2: 76.5 MB
+
+Data: 05/07/2026
+----------------------------------------
+  01. ElasticSearchException = 0
+  02. Notfound = 0
+  03. Broken Pipe = 6
+  04. Connection Reset By Peer = 3
+  05. LDAPUserImporterImpl = 16
+  06. Problem accessing LDAP server = 0
+  07. LDAPAuth = 0
+  08. Skip /frontend-js-metal-web$metal = 0
+  09. No theme found for mtportal_WAR = 0
+  10. Error {code="404"} = 6559
+  11. SAX Security Manager = 0
+  12. Ajax-Loader = 0
+  13. CTCollectionPreviewFilter = 573
+  14. FTL stack trace = 4
+  15. NoSuchFileEntryException = 0
+  16. InvalidRepositoryIdException = 0
+  17. PaginationLimitFilter bot UA = 46892
+
+  LOG Liferay 1: 26.0 MB
+  LOG Liferay 2: 29.4 MB
 
 
 --------------------------------------------------------------------------------
 Tamanho em bytes - Elasticsearch:
 
-  Elasticsearch 1: 11152423920
-  Elasticsearch 2: 69657396
-  Elasticsearch 3: 29602697
+  Elasticsearch 1: 11445218567
+  Elasticsearch 2: 77537708
+  Elasticsearch 3: 21704005

@@ -1,6 +1,30 @@
 [
   {
     "modulo": "scraper",
+    "data": "2026-07-08 07:13:41",
+    "status": "sucesso",
+    "detalhes": "73 portais | 20 imagens baixadas"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-07-06 06:55:59",
+    "status": "sucesso",
+    "detalhes": "3 data(s) | 172693 ocorrencias no total"
+  },
+  {
+    "modulo": "logs",
+    "data": "2026-07-06 06:54:58",
+    "status": "sucesso",
+    "detalhes": "1 data(s) | 22777 ocorrencias no total"
+  },
+  {
+    "modulo": "scraper",
+    "data": "2026-07-02 10:43:14",
+    "status": "sucesso",
+    "detalhes": "1 portais | 39 imagens baixadas"
+  },
+  {
+    "modulo": "scraper",
     "data": "2026-07-02 09:30:47",
     "status": "sucesso",
     "detalhes": "46 portais | 1 imagens baixadas"
