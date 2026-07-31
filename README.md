@@ -4,6 +4,27 @@ Central de automações internas com **duas interfaces**: um app desktop (Tkinte
 
 ---
 
+## Início Rápido
+
+Para quem já tem Python 3.13 e Chrome instalados e só quer subir o projeto:
+
+```powershell
+git clone https://github.com/PedroHSN98/Interface_Automatica.git
+cd Interface_Automatica
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+# edite o .env com suas credenciais antes de rodar
+python app.py          # interface desktop
+# ou
+run_web.bat             # interface web (http://localhost:5000)
+```
+
+Detalhes de cada passo, pré-requisitos e solução de problemas nas seções abaixo.
+
+---
+
 ## Especificações Técnicas
 
 | Item | Detalhe |
